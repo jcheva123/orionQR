@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrionQR - Evento Interactivo</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.9/Babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora&display=swap" rel="stylesheet">
+  <style>
+    body { background-color: #f3f4f6; font-family: 'Lora', serif; }
+    h1, h2 { font-family: 'Playfair Display', serif; }
+    .fade-in { animation: fadeIn 2s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .wordcloud-container { width: 100%; height: 400px; }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FFD700', // Dorado
+            secondary: '#FFFFFF', // Blanco
+            accent: '#1E3A8A', // Azul elegante
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Lista de palabras prohibidas para filtrado
+    const forbiddenWords = ['groseria', 'insulto', 'ofensa'];
+
+    // URL del backend (Cloudflare Worker)
+    const API_URL = 'https://api.orionqr.com'; // Reemplaza con la URL real del Worker
+
+    // Componente del Formulario para Invitados
+    const GuestForm = () => {
+      const [name, setName] = useState('');
+      const [phone, setPhone] = useState('');
+      const [word, setWord] = useState('');
+      const [message, setMessage] = useState('');
+      const [error, setError] = useState('');
+
+      const validateInput = (text) => {
+        return !forbiddenWords.some((word) => text.toLowerCase().includes(word));
+      };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!name || !phone || !word || !message) {
+          setError('Por favor, completa todos los campos.');
+          return;
+        }
+        if (!validateInput(word) || !validateInput(message)) {
+          setError('El contenido ingresado no es apropiado.');
+          return;
+        }
+        try {
+          const response = await fetch(`${API_URL}/api/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone, word, message }),
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            setError(data.error || 'Error al enviar el mensaje');
+            return;
+          }
+          setError('');
+          setName('');
+          setPhone('');
+          setWord('');
+          setMessage('');
+          alert('¡Gracias por tu mensaje!');
+        } catch (err) {
+          setError('Error de conexión. Intenta de nuevo.');
+        }
+      };
+
+      return (
+        <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
+          <h1 className="text-2xl font-bold text-center text-primary mb-4">Bienvenidos al Evento</h1>
+          <p className="text-center text-gray-600 mb-6">Escanea el QR y comparte tu mensaje</p>
+          {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <input
+              type="tel"
+              placeholder="Teléfono"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <input
+              type="text"
+              placeholder="Palabra para la nube (ej. Amor)"
+              value={word}
+              onChange={(e) => setWord(e.target.value)}
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <textarea
+              placeholder="Mensaje para el muro"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-accent"
+              rows="4"
+            ></textarea>
+            <button
+              type="submit"
+              className="w-full bg-accent text-secondary p-2 rounded hover:bg-blue-700 transition"
+            >
+              Enviar
+            </button>
+          </form>
+        </div>
+      );
+    };
+
+    // Componente de Visualización (Nube de Palabras y Muro de Mensajes)
+    const DisplayScreen = () => {
+      const [words, setWords] = useState([]);
+      const [messages, setMessages] = useState([]);
+
+      useEffect(() => {
+        const fetchWords = async () => {
+          try {
+            const response = await fetch(`${API_URL}/api/words`);
+            const data = await response.json();
+            setWords(data);
+          } catch (err) {
+            console.error('Error fetching words:', err);
+          }
+        };
+
+        const fetchMessages = async () => {
+          try {
+            const response = await fetch(`${API_URL}/api/messages/approved`);
+            const data = await response.json();
+            setMessages(data);
+          } catch (err) {
+            console.error('Error fetching messages:', err);
+          }
+        };
+
+        fetchWords();
+        fetchMessages();
+        const interval = setInterval(() => {
+          fetchWords();
+          fetchMessages();
+        }, 5000);
+        return () => clearInterval(interval);
+      }, []);
+
+      useEffect(() => {
+        if (words.length > 0) {
+          const canvas = document.getElementById('wordcloud');
+          WordCloud(canvas, {
+            list: words,
+            gridSize: 8,
+            weightFactor: 2,
+            fontFamily: 'Playfair Display',
+            color: 'random-dark',
+            backgroundColor: '#fff',
+            rotateRatio: 0.5,
+            rotationSteps: 2,
+          });
+        }
+      }, [words]);
+
+      return (
+        <div className="p-10 bg-gray-100 min-h-screen">
+          <h1 className="text-4xl font-bold text-center text-primary mb-10">Evento en Vivo</h1>
+          <div className="grid grid-cols-2 gap-10">
+            <div>
+              <h2 className="text-2xl font-semibold text-accent mb-4">Nube de Palabras</h2>
+              <canvas id="wordcloud" className="wordcloud-container bg-white rounded-lg shadow"></canvas>
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-accent mb-4">Muro de Mensajes</h2>
+              <div className="space-y-4">
+                {messages.map((msg, index) => (
+                  <p key={index} className="p-4 bg-white rounded-lg shadow fade-in text-gray-800">
+                    {msg}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Componente del Panel de Control del Operador
+    const OperatorPanel = () => {
+      const [pendingMessages, setPendingMessages] = useState([]);
+      const [password, setPassword] = useState('');
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+      useEffect(() => {
+        if (isAuthenticated) {
+          const fetchPendingMessages = async () => {
+            try {
+              const response = await fetch(`${API_URL}/api/messages/pending`);
+              const data = await response.json();
+              setPendingMessages(data);
+            } catch (err) {
+              console.error('Error fetching pending messages:', err);
+            }
+          };
+          fetchPendingMessages();
+          const interval = setInterval(fetchPendingMessages, 5000);
+          return () => clearInterval(interval);
+        }
+      }, [isAuthenticated]);
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        if (password === 'admin123') {
+          setIsAuthenticated(true);
+        } else {
+          alert('Contraseña incorrecta');
+        }
+      };
+
+      const approveMessage = async (id) => {
+        try {
+          await fetch(`${API_URL}/api/messages/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'approved' }),
+          });
+          setPendingMessages(pendingMessages.filter((msg) => msg.id !== id));
+        } catch (err) {
+          console.error('Error approving message:', err);
+        }
+      };
+
+      const rejectMessage = async (id) => {
+        try {
+          await fetch(`${API_URL}/api/messages/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'rejected' }),
+          });
+          setPendingMessages(pendingMessages.filter((msg) => msg.id !== id));
+        } catch (err) {
+          console.error('Error rejecting message:', err);
+        }
+      };
+
+      if (!isAuthenticated) {
+        return (
+          <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
+            <h1 className="text-2xl font-bold text-center text-primary mb-6">Acceso al Panel del Operador</h1>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+              <button
+                type="submit"
+                className="w-full bg-accent text-secondary p-2 rounded hover:bg-blue-700 transition"
+              >
+                Iniciar Sesión
+              </button>
+            </form>
+          </div>
+        );
+      }
+
+      return (
+        <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
+          <h1 className="text-2xl font-bold text-center text-primary mb-6">Panel del Operador</h1>
+          <div className="space-y-4">
+            {pendingMessages.map((msg) => (
+              <div key={msg.id} className="p-4 bg-gray-50 rounded-lg shadow flex justify-between items-center">
+                <div>
+                  <p className="font-semibold">{msg.name}</p>
+                  <p>{msg.message}</p>
+                  <p className="text-sm text-gray-600">Palabra: {msg.word}</p>
+                </div>
+                <div className="space-x-2">
+                  <button
+                    onClick={() => approveMessage(msg.id)}
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                  >
+                    Aprobar
+                  </button>
+                  <button
+                    onClick={() => rejectMessage(msg.id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  >
+                    Rechazar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // Componente para Generar QR
+    const QRCodeGenerator = () => {
+      useEffect(() => {
+        const url = 'https://orionqr.com'; // Reemplaza con la URL de Cloudflare Pages
+        QRCode.toCanvas(document.getElementById('qrcode'), url, { width: 200 }, (err) => {
+          if (err) console.error('Error generating QR:', err);
+        });
+      }, []);
+
+      return (
+        <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg mt-10 text-center">
+          <h1 className="text-2xl font-bold text-primary mb-4">Escanea el QR</h1>
+          <p className="text-gray-600 mb-6">Usa tu celular para compartir tu mensaje</p>
+          <canvas id="qrcode"></canvas>
+        </div>
+      );
+    };
+
+    // Componente Principal
+    const App = () => {
+      const [view, setView] = useState('guest');
+
+      return (
+        <div>
+          <nav className="bg-accent p-4 text-secondary flex justify-center space-x-4">
+            <button onClick={() => setView('guest')} className="hover:underline">Formulario</button>
+            <button onClick={() => setView('display')} className="hover:underline">Pantalla</button>
+            <button onClick={() => setView('operator')} className="hover:underline">Operador</button>
+            <button onClick={() => setView('qr')} className="hover:underline">QR</button>
+          </nav>
+          {view === 'guest' && <GuestForm />}
+          {view === 'display' && <DisplayScreen />}
+          {view === 'operator' && <OperatorPanel />}
+          {view === 'qr' && <QRCodeGenerator />}
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
