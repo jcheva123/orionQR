@@ -41,7 +41,7 @@
     const forbiddenWords = ['groseria', 'insulto', 'ofensa'];
 
     // URL del backend (Cloudflare Worker)
-    const API_URL = 'https://orionqr.jcheva.workers.dev'; // Reemplaza con la URL real del Worker
+    const API_URL = 'https://orionqr.jcheva.workers.dev';
 
     // Componente del Formulario para Invitados
     const GuestForm = () => {
@@ -322,7 +322,7 @@
     // Componente para Generar QR
     const QRCodeGenerator = () => {
       useEffect(() => {
-        const url = 'https://orionqr.pages.dev'; // Reemplaza con la URL de Cloudflare Pages
+        const url = 'https://orionqr.pages.dev';
         QRCode.toCanvas(document.getElementById('qrcode'), url, { width: 200 }, (err) => {
           if (err) console.error('Error generating QR:', err);
         });
