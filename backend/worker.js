@@ -126,7 +126,7 @@ async function handleRequest(request) {
     if (!['approved', 'rejected'].includes(status)) {
       return new Response(JSON.stringify({ error: 'Estado inválido' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders#pragma
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
 
@@ -142,6 +142,7 @@ async function handleRequest(request) {
     await EVENTO_KV.put(`message:${id}`, JSON.stringify(message));
 
     return new Response(JSON.stringify({ success: 'Mensaje actualizado' }), {
+      status: 200,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
