@@ -2,127 +2,107 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=256, initial-scale=1.0">
-  <title>OrionQR Totem Display</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrionQR - Totem Display</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
       padding: 0;
       overflow: hidden;
+      background-color: #F8E1E9;
       width: 256px;
       height: 704px;
     }
-    #container {
+    #content {
       width: 256px;
       height: 704px;
       position: relative;
-      background-color: #F8E1E9;
       overflow: hidden;
     }
-    #videoElement, #imageElement, #messageElement {
-      width: 256px;
-      height: 704px;
+    #text-content {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      animation: subtleAnimation 30s infinite;
+    }
+    @keyframes subtleAnimation {
+      0%, 90% { transform: translateY(0); opacity: 1; }
+      95% { transform: translateY(-10px); opacity: 0.8; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    #media-content {
+      width: 100%;
+      height: 100%;
       object-fit: contain;
       display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    #messageElement {
-      font-family: 'Dancing Script', cursive;
-      font-size: 48px;
-      color: #4A4A4A;
-      text-align: center;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background-color: transparent;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    .fade-in {
-      animation: fadeIn 1s ease-in;
     }
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Parisienne&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="container">
-    <video id="videoElement" autoplay loop muted playsinline>
-      <source id="videoSource" type="video/mp4">
-      Your browser does not support the video tag.
+  <div id="content">
+    <div id="text-content"></div>
+    <img id="media-content" alt="Media">
+    <video id="media-content-video" autoplay loop muted playsinline style="display: none;">
+      <source id="video-source" type="video/mp4">
     </video>
-    <img id="imageElement" alt="Media">
-    <div id="messageElement"></div>
   </div>
+
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
 
-    async function updateDisplay() {
+    async function fetchState() {
       try {
         const response = await fetch(`${backendUrl}/state`);
-        if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+        if (!response.ok) throw new Error('Error al obtener el estado');
         const state = await response.json();
-
-        const container = document.getElementById('container');
-        const videoElement = document.getElementById('videoElement');
-        const videoSource = document.getElementById('videoSource');
-        const imageElement = document.getElementById('imageElement');
-        const messageElement = document.getElementById('messageElement');
-
-        // Ocultar todos los elementos
-        videoElement.style.display = 'none';
-        imageElement.style.display = 'none';
-        messageElement.style.display = 'none';
-        videoSource.src = '';
-        imageElement.src = '';
-        container.style.backgroundColor = '#F8E1E9'; // Default
-
-        if (state.type === 'media') {
-          let mediaPath = state.value;
-          if (mediaPath.startsWith('https://orionqr.onrender.com')) {
-            mediaPath = mediaPath.replace('https://orionqr.onrender.com', '');
-          }
-          mediaPath = mediaPath.startsWith('/') ? mediaPath : `/${mediaPath}`;
-          const mediaUrl = `${backendUrl}${mediaPath}`;
-          console.log('Loading media:', mediaUrl);
-
-          if (mediaUrl.endsWith('.mp4')) {
-            videoSource.src = mediaUrl;
-            videoElement.load();
-            videoElement.style.display = 'block';
-            videoElement.classList.add('fade-in');
-            videoElement.play().catch(error => {
-              console.error('Error playing video:', error);
-              alert('No se pudo reproducir el video.');
-            });
-          } else if (mediaUrl.endsWith('.jpg') || mediaUrl.endsWith('.png')) {
-            imageElement.src = mediaUrl;
-            imageElement.style.display = 'block';
-            imageElement.classList.add('fade-in');
-            imageElement.onerror = () => {
-              console.error('Error loading image:', mediaUrl);
-              alert('No se pudo cargar la imagen.');
-            };
-          }
-        } else if (state.type === 'messages') {
-          messageElement.textContent = state.value || '';
-          messageElement.style.display = 'flex';
-          messageElement.classList.add('fade-in');
-          messageElement.style.fontFamily = state.index % 2 === 0 ? "'Dancing Script', cursive" : "'Parisienne', cursive";
-          messageElement.style.fontSize = state.index % 2 === 0 ? '48px' : '36px';
-        } else if (state.type === 'color') {
-          container.style.backgroundColor = state.value;
-        }
+        updateDisplay(state);
       } catch (error) {
-        console.error('Error updating display:', error);
+        console.error('Error:', error.message);
       }
     }
 
-    setInterval(updateDisplay, 2000); // Reducido a 2 segundos
-    updateDisplay();
+    function updateDisplay(state) {
+      const textContent = document.getElementById('text-content');
+      const mediaContent = document.getElementById('media-content');
+      const mediaContentVideo = document.getElementById('media-content-video');
+      const videoSource = document.getElementById('video-source');
+
+      // Reset display
+      document.body.style.backgroundColor = '#F8E1E9';
+      textContent.style.display = 'none';
+      mediaContent.style.display = 'none';
+      mediaContentVideo.style.display = 'none';
+
+      if (state.type === 'color') {
+        document.body.style.backgroundColor = state.value;
+      } else if (state.type === 'media') {
+        if (state.value.endsWith('.mp4')) {
+          videoSource.src = state.value;
+          mediaContentVideo.load();
+          mediaContentVideo.style.display = 'block';
+          mediaContentVideo.style.width = '100%';
+          mediaContentVideo.style.height = '100%';
+          mediaContentVideo.style.objectFit = 'contain';
+        } else {
+          mediaContent.src = state.value;
+          mediaContent.style.display = 'block';
+        }
+      } else if (state.type === 'text') {
+        const { text, font, size, color, position } = state.value;
+        textContent.textContent = text;
+        textContent.style.fontFamily = `'${font}', serif`;
+        textContent.style.fontSize = `${size}px`;
+        textContent.style.color = color;
+        textContent.style.top = `${position}%`;
+        textContent.style.transform = 'translateY(-50%)';
+        textContent.style.display = 'block';
+      }
+    }
+
+    // Fetch state every 2 seconds
+    fetchState();
+    setInterval(fetchState, 2000);
   </script>
 </body>
 </html>
