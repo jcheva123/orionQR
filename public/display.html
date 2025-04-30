@@ -24,12 +24,21 @@
       position: absolute;
       width: 100%;
       text-align: center;
+      white-space: pre-wrap;
       animation: subtleAnimation 30s infinite;
     }
     @keyframes subtleAnimation {
-      0%, 90% { transform: translateY(0); opacity: 1; }
-      95% { transform: translateY(-10px); opacity: 0.8; }
-      100% { transform: translateY(0); opacity: 1; }
+      0% { opacity: 0; transform: translateY(20px); }
+      5% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      95% { opacity: 0.8; transform: translateY(-10px); }
+      100% { opacity: 0; transform: translateY(20px); }
+    }
+    @keyframes backgroundAnimation {
+      0% { background-color: var(--color1); }
+      33% { background-color: var(--color2); }
+      66% { background-color: var(--color3, var(--color1)); }
+      100% { background-color: var(--color1); }
     }
     #media-content {
       width: 100%;
@@ -70,12 +79,19 @@
 
       // Reset display
       document.body.style.backgroundColor = '#F8E1E9';
+      document.body.style.animation = 'none';
       textContent.style.display = 'none';
       mediaContent.style.display = 'none';
       mediaContentVideo.style.display = 'none';
 
       if (state.type === 'color') {
         document.body.style.backgroundColor = state.value;
+      } else if (state.type === 'animatedBackground') {
+        const colors = state.value;
+        document.body.style.setProperty('--color1', colors[0]);
+        document.body.style.setProperty('--color2', colors[1]);
+        document.body.style.setProperty('--color3', colors[2] || colors[0]);
+        document.body.style.animation = 'backgroundAnimation 15s infinite';
       } else if (state.type === 'media') {
         if (state.value.endsWith('.mp4')) {
           videoSource.src = state.value;
