@@ -5,10 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OrionQR - Control Totem</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
   <style>
     body { background-color: #F8E1E9; }
     #admin-panel { display: none; }
+    .text-preview {
+      width: 256px;
+      height: 704px;
+      background-color: #F8E1E9;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .preview-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      animation: subtleAnimation 30s infinite;
+    }
+    @keyframes subtleAnimation {
+      0%, 90% { transform: translateY(0); opacity: 1; }
+      95% { transform: translateY(-10px); opacity: 0.8; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
   </style>
 </head>
 <body class="font-['Playfair_Display'] text-gray-800">
@@ -20,14 +39,45 @@
       <h2 class="text-2xl mb-4">Opciones</h2>
       
       <div class="mb-6">
-        <h3 class="text-xl mb-2">Cargar Foto/Video</h3>
-        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4" class="w-full p-2 border rounded">
-        <button id="upload-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Subir y Mostrar</button>
+        <h3 class="text-xl mb-2">Texto Personalizado</h3>
+        <input id="custom-text" type="text" placeholder="Ej: Boda de Alejo & Valentina" class="w-full p-2 mb-2 border rounded">
+        <div class="mb-2">
+          <label class="block mb-1">Tipografía:</label>
+          <select id="text-font" class="w-full p-2 border rounded">
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Lobster">Lobster</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="block mb-1">Tamaño del Texto:</label>
+          <select id="text-size" class="w-full p-2 border rounded">
+            <option value="20">Pequeño (20px)</option>
+            <option value="30">Mediano (30px)</option>
+            <option value="40">Grande (40px)</option>
+            <option value="50">Muy Grande (50px)</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="block mb-1">Color del Texto:</label>
+          <input id="text-color" type="color" class="w-full h-10">
+        </div>
+        <div class="mb-2">
+          <label class="block mb-1">Posición Vertical:</label>
+          <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
+          <span id="position-value" class="text-sm text-gray-600">50%</span>
+        </div>
+        <div class="text-preview" id="text-preview">
+          <div class="preview-text" id="preview-text">Texto de ejemplo</div>
+        </div>
+        <button id="text-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Texto</button>
       </div>
       
       <div class="mb-6">
-        <h3 class="text-xl mb-2">Mostrar Mensajes</h3>
-        <button id="messages-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Activar Mensajes</button>
+        <h3 class="text-xl mb-2">Cargar Foto/Video</h3>
+        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4" class="w-full p-2 border rounded">
+        <button id="upload-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Subir y Mostrar</button>
       </div>
       
       <div>
@@ -47,8 +97,7 @@
   </div>
 
   <script>
-    const backendUrl = 'https://orionqr.onrender.com'; // Cambiar a URL de ngrok o servidor remoto
-    const messagesUrl = 'http://localhost:3000'; // Cambiar a URL pública si es necesario
+    const backendUrl = 'https://orionqr.onrender.com';
 
     async function setContent(type, value) {
       try {
@@ -85,33 +134,64 @@
       }
     }
 
-    async function showMessages() {
-      try {
-        const response = await fetch(`${messagesUrl}/mensajes`);
-        if (!response.ok) throw new Error('Error al cargar mensajes');
-        const messages = await response.json();
-        await setContent('messages', messages);
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    }
-
     function setColor(color) {
       setContent('color', color);
+      document.getElementById('text-preview').style.backgroundColor = color;
+    }
+
+    function updateTextPreview() {
+      const text = document.getElementById('custom-text').value || 'Texto de ejemplo';
+      const font = document.getElementById('text-font').value;
+      const size = document.getElementById('text-size').value + 'px';
+      const color = document.getElementById('text-color').value;
+      const position = document.getElementById('text-position').value;
+      const previewText = document.getElementById('preview-text');
+
+      previewText.textContent = text;
+      previewText.style.fontFamily = `'${font}', serif`;
+      previewText.style.fontSize = size;
+      previewText.style.color = color;
+      previewText.style.top = `${position}%`;
+      previewText.style.transform = 'translateY(-50%)';
     }
 
     document.getElementById('admin-password').addEventListener('input', (e) => {
-      if (e.target.value === 'admin123') { // Cambia esta contraseña
+      if (e.target.value === 'admin123') {
         document.getElementById('admin-panel').style.display = 'block';
       }
     });
 
     document.getElementById('upload-btn').addEventListener('click', uploadMedia);
-    document.getElementById('messages-btn').addEventListener('click', showMessages);
     document.getElementById('custom-color-btn').addEventListener('click', () => {
       const color = document.getElementById('custom-color').value;
       setColor(color);
     });
+
+    document.getElementById('text-btn').addEventListener('click', () => {
+      const text = document.getElementById('custom-text').value;
+      const font = document.getElementById('text-font').value;
+      const size = document.getElementById('text-size').value;
+      const color = document.getElementById('text-color').value;
+      const position = document.getElementById('text-position').value;
+      if (!text) {
+        alert('Por favor, ingresa un texto');
+        return;
+      }
+      const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
+      setContent('text', textConfig);
+    });
+
+    document.getElementById('custom-text').addEventListener('input', updateTextPreview);
+    document.getElementById('text-font').addEventListener('change', updateTextPreview);
+    document.getElementById('text-size').addEventListener('change', updateTextPreview);
+    document.getElementById('text-color').addEventListener('input', updateTextPreview);
+    document.getElementById('text-position').addEventListener('input', (e) => {
+      document.getElementById('position-value').textContent = `${e.target.value}%`;
+      updateTextPreview();
+    });
+
+    updateTextPreview();
   </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93893b37c8b5c000',t:'MTc0NjAzOTA5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
