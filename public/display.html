@@ -26,6 +26,7 @@
       text-align: center;
       white-space: pre-wrap;
       animation: subtleAnimation 30s infinite;
+      z-index: 1;
     }
     @keyframes subtleAnimation {
       0% { opacity: 0; transform: translateY(20px); }
@@ -40,11 +41,15 @@
       66% { background-color: var(--color3, var(--color1)); }
       100% { background-color: var(--color1); }
     }
-    #media-content {
+    #media-content, #media-content-video {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
     }
   </style>
 </head>
@@ -52,7 +57,7 @@
   <div id="content">
     <div id="text-content"></div>
     <img id="media-content" alt="Media">
-    <video id="media-content-video" autoplay loop muted playsinline style="display: none;">
+    <video id="media-content-video" autoplay loop muted playsinline>
       <source id="video-source" type="video/mp4">
     </video>
   </div>
@@ -97,23 +102,18 @@
         }
       }
 
-      // Apply media
+      // Apply media if present
       if (state.media) {
         if (state.media.endsWith('.mp4')) {
           videoSource.src = state.media;
           mediaContentVideo.load();
           mediaContentVideo.style.display = 'block';
-          mediaContentVideo.style.width = '100%';
-          mediaContentVideo.style.height = '100%';
-          mediaContentVideo.style.objectFit = 'contain';
         } else {
           mediaContent.src = state.media;
           mediaContent.style.display = 'block';
         }
-      }
-
-      // Apply text
-      if (state.text) {
+      } else if (state.text) {
+        // Apply text if no media is present
         const { text, font, size, color, position } = state.text;
         textContent.textContent = text;
         textContent.style.fontFamily = `'${font}', serif`;
