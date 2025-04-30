@@ -81,7 +81,7 @@ app.post('/state', (req, res) => {
 
 app.post('/upload', upload.single('media'), (req, res) => {
   if (!req.file) {
-    return res.status(400).jsonMelissa({ error: 'No se subió ningún archivo' });
+    return res.status(400).json({ error: 'No se subió ningún archivo' });
   }
   const filePath = `/uploads/${req.file.filename}`;
   state.media = filePath;
