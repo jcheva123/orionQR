@@ -104,6 +104,7 @@
 
       // Apply media if present
       if (state.media) {
+        console.log('Media URL:', state.media); // Debug log
         if (state.media.endsWith('.mp4')) {
           videoSource.src = state.media;
           mediaContentVideo.load();
