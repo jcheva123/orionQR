@@ -58,7 +58,7 @@
     <div id="messageElement"></div>
   </div>
   <script>
-    const backendUrl = 'https://orionqr.onrender.com';
+    const backendUrl = 'https://orionqr.onrender.com'; // Sin barra final
 
     async function updateDisplay() {
       try {
@@ -81,7 +81,17 @@
         container.style.backgroundColor = '#F8E1E9'; // Default
 
         if (state.type === 'media') {
-          const mediaUrl = `${backendUrl}${state.value}`;
+          // Normalizar la URL
+          let mediaPath = state.value;
+          // Si state.value incluye el dominio completo, extraer solo el path
+          if (mediaPath.startsWith('https://orionqr.onrender.com')) {
+            mediaPath = mediaPath.replace('https://orionqr.onrender.com', '');
+          }
+          // Asegurar que empieza con /
+          mediaPath = mediaPath.startsWith('/') ? mediaPath : `/${mediaPath}`;
+          const mediaUrl = `${backendUrl}${mediaPath}`;
+          console.log('Loading media:', mediaUrl); // Depuración
+
           if (mediaUrl.endsWith('.mp4')) {
             videoSource.src = mediaUrl;
             videoElement.load();
@@ -114,7 +124,7 @@
       }
     }
 
-    setInterval(updateDisplay, 10000);
+    setInterval(updateDisplay, 30000); // 30s para evitar cambios rápidos
     updateDisplay();
   </script>
 </body>
