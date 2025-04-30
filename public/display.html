@@ -2,16 +2,22 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=256, initial-scale=1.0">
   <title>OrionQR Totem Display</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #F8E1E9;
       overflow: hidden;
       width: 256px;
       height: 704px;
+    }
+    #container {
+      width: 256px;
+      height: 704px;
+      position: relative;
+      background-color: #F8E1E9;
+      overflow: hidden;
     }
     #videoElement, #imageElement, #messageElement {
       width: 256px;
@@ -27,10 +33,10 @@
       font-size: 48px;
       color: #4A4A4A;
       text-align: center;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
-      background-color: #F8E1E9;
+      background-color: transparent;
     }
     @keyframes fadeIn {
       from { opacity: 0; }
@@ -43,12 +49,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Parisienne&display=swap" rel="stylesheet">
 </head>
 <body>
-  <video id="videoElement" autoplay loop muted playsinline>
-    <source id="videoSource" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-  <img id="imageElement" alt="Media">
-  <div id="messageElement"></div>
+  <div id="container">
+    <video id="videoElement" autoplay loop muted playsinline>
+      <source id="videoSource" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <img id="imageElement" alt="Media">
+    <div id="messageElement"></div>
+  </div>
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
 
@@ -58,17 +66,19 @@
         if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
         const state = await response.json();
 
+        const container = document.getElementById('container');
         const videoElement = document.getElementById('videoElement');
         const videoSource = document.getElementById('videoSource');
         const imageElement = document.getElementById('imageElement');
         const messageElement = document.getElementById('messageElement');
 
-        // Ocultar todos los elementos inicialmente
+        // Ocultar todos los elementos
         videoElement.style.display = 'none';
         imageElement.style.display = 'none';
         messageElement.style.display = 'none';
         videoSource.src = '';
         imageElement.src = '';
+        container.style.backgroundColor = '#F8E1E9'; // Default
 
         if (state.type === 'media') {
           const mediaUrl = `${backendUrl}${state.value}`;
@@ -79,29 +89,31 @@
             videoElement.classList.add('fade-in');
             videoElement.play().catch(error => {
               console.error('Error playing video:', error);
-              alert('No se pudo reproducir el video. Verifica el formato o la conexión.');
+              alert('No se pudo reproducir el video.');
             });
           } else if (mediaUrl.endsWith('.jpg') || mediaUrl.endsWith('.png')) {
             imageElement.src = mediaUrl;
             imageElement.style.display = 'block';
             imageElement.classList.add('fade-in');
+            imageElement.onerror = () => {
+              console.error('Error loading image:', mediaUrl);
+              alert('No se pudo cargar la imagen.');
+            };
           }
         } else if (state.type === 'messages') {
-          messageElement.textContent = state.value; // Asume un mensaje
+          messageElement.textContent = state.value || '';
           messageElement.style.display = 'flex';
           messageElement.classList.add('fade-in');
-          // Alternar fuentes para variedad
           messageElement.style.fontFamily = state.index % 2 === 0 ? "'Dancing Script', cursive" : "'Parisienne', cursive";
           messageElement.style.fontSize = state.index % 2 === 0 ? '48px' : '36px';
         } else if (state.type === 'color') {
-          document.body.style.backgroundColor = state.value;
+          container.style.backgroundColor = state.value;
         }
       } catch (error) {
         console.error('Error updating display:', error);
       }
     }
 
-    // Actualizar cada 10 segundos
     setInterval(updateDisplay, 10000);
     updateDisplay();
   </script>
