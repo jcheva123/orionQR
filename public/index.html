@@ -21,12 +21,21 @@
       position: absolute;
       width: 100%;
       text-align: center;
+      white-space: pre-wrap;
       animation: subtleAnimation 30s infinite;
     }
     @keyframes subtleAnimation {
-      0%, 90% { transform: translateY(0); opacity: 1; }
-      95% { transform: translateY(-10px); opacity: 0.8; }
-      100% { transform: translateY(0); opacity: 1; }
+      0% { opacity: 0; transform: translateY(20px); }
+      5% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      95% { opacity: 0.8; transform: translateY(-10px); }
+      100% { opacity: 0; transform: translateY(20px); }
+    }
+    @keyframes backgroundAnimation {
+      0% { background-color: var(--color1); }
+      33% { background-color: var(--color2); }
+      66% { background-color: var(--color3, var(--color1)); }
+      100% { background-color: var(--color1); }
     }
   </style>
 </head>
@@ -39,8 +48,44 @@
       <h2 class="text-2xl mb-4">Opciones</h2>
       
       <div class="mb-6">
+        <h3 class="text-xl mb-2">Cargar Foto/Video</h3>
+        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4" class="w-full p-2 border rounded">
+        <button id="upload-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Subir y Mostrar</button>
+      </div>
+      
+      <div class="mb-6">
+        <h3 class="text-xl mb-2">Color de Fondo</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <button class="bg-black text-white p-2 rounded" onclick="setColor('black')">Negro (Apagar)</button>
+          <button class="bg-red-500 text-white p-2 rounded" onclick="setColor('red')">Rojo</button>
+          <button class="bg-blue-500 text-white p-2 rounded" onclick="setColor('blue')">Azul</button>
+          <button class="bg-green-500 text-white p-2 rounded" onclick="setColor('green')">Verde</button>
+          <button class="bg-yellow-500 text-white p-2 rounded" onclick="setColor('yellow')">Amarillo</button>
+          <button class="bg-[#F8E1E9] text-gray-800 p-2 rounded border" onclick="setColor('#F8E1E9')">Rosa</button>
+        </div>
+        <input id="custom-color" type="color" class="mt-2 w-full h-10">
+        <button id="custom-color-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Color Personalizado</button>
+        <div class="mt-4">
+          <h4 class="text-lg mb-2">Fondo Animado</h4>
+          <div class="mb-2">
+            <label class="block mb-1">Color 1:</label>
+            <input id="bg-color1" type="color" value="#F8E1E9" class="w-full h-10">
+          </div>
+          <div class="mb-2">
+            <label class="block mb-1">Color 2:</label>
+            <input id="bg-color2" type="color" value="#D4A017" class="w-full h-10">
+          </div>
+          <div class="mb-2">
+            <label class="block mb-1">Color 3 (opcional):</label>
+            <input id="bg-color3" type="color" value="#FFFFFF" class="w-full h-10">
+          </div>
+          <button id="animated-bg-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Fondo Animado</button>
+        </div>
+      </div>
+      
+      <div class="mb-6">
         <h3 class="text-xl mb-2">Texto Personalizado</h3>
-        <input id="custom-text" type="text" placeholder="Ej: Boda de Alejo & Valentina" class="w-full p-2 mb-2 border rounded">
+        <textarea id="custom-text" rows="3" placeholder="Ej: Boda de Alejo\n& Valentina" class="w-full p-2 mb-2 border rounded resize-none"></textarea>
         <div class="mb-2">
           <label class="block mb-1">Tipografía:</label>
           <select id="text-font" class="w-full p-2 border rounded">
@@ -72,26 +117,6 @@
           <div class="preview-text" id="preview-text">Texto de ejemplo</div>
         </div>
         <button id="text-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Texto</button>
-      </div>
-      
-      <div class="mb-6">
-        <h3 class="text-xl mb-2">Cargar Foto/Video</h3>
-        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4" class="w-full p-2 border rounded">
-        <button id="upload-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Subir y Mostrar</button>
-      </div>
-      
-      <div>
-        <h3 class="text-xl mb-2">Color de Fondo</h3>
-        <div class="grid grid-cols-3 gap-2">
-          <button class="bg-black text-white p-2 rounded" onclick="setColor('black')">Negro (Apagar)</button>
-          <button class="bg-red-500 text-white p-2 rounded" onclick="setColor('red')">Rojo</button>
-          <button class="bg-blue-500 text-white p-2 rounded" onclick="setColor('blue')">Azul</button>
-          <button class="bg-green-500 text-white p-2 rounded" onclick="setColor('green')">Verde</button>
-          <button class="bg-yellow-500 text-white p-2 rounded" onclick="setColor('yellow')">Amarillo</button>
-          <button class="bg-[#F8E1E9] text-gray-800 p-2 rounded border" onclick="setColor('#F8E1E9')">Rosa</button>
-        </div>
-        <input id="custom-color" type="color" class="mt-2 w-full h-10">
-        <button id="custom-color-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Color Personalizado</button>
       </div>
     </div>
   </div>
@@ -137,6 +162,16 @@
     function setColor(color) {
       setContent('color', color);
       document.getElementById('text-preview').style.backgroundColor = color;
+      document.getElementById('text-preview').style.animation = 'none';
+    }
+
+    function setAnimatedBackground(colors) {
+      setContent('animatedBackground', colors);
+      const preview = document.getElementById('text-preview');
+      preview.style.setProperty('--color1', colors[0]);
+      preview.style.setProperty('--color2', colors[1]);
+      preview.style.setProperty('--color3', colors[2] || colors[0]);
+      preview.style.animation = 'backgroundAnimation 15s infinite';
     }
 
     function updateTextPreview() {
@@ -165,6 +200,13 @@
     document.getElementById('custom-color-btn').addEventListener('click', () => {
       const color = document.getElementById('custom-color').value;
       setColor(color);
+    });
+
+    document.getElementById('animated-bg-btn').addEventListener('click', () => {
+      const color1 = document.getElementById('bg-color1').value;
+      const color2 = document.getElementById('bg-color2').value;
+      const color3 = document.getElementById('bg-color3').value;
+      setAnimatedBackground([color1, color2, color3]);
     });
 
     document.getElementById('text-btn').addEventListener('click', () => {
