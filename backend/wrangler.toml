@@ -1,7 +1,0 @@
-name = "orionqr"
-main = "worker.js"
-compatibility_date = "2025-04-29"
-
-[[kv_namespaces]]
-binding = "EVENTO_KV"
-id = "8487696639614cf7a2c8e10ade3846c7" # Reemplaza con el ID real
