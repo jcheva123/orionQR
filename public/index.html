@@ -124,12 +124,15 @@
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
 
-    async function setContent(type, value) {
+    // Track the current background state
+    let currentBackground = { type: 'color', value: '#F8E1E9' };
+
+    async function setState({ text, background, media }) {
       try {
         const response = await fetch(`${backendUrl}/state`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type, value })
+          body: JSON.stringify({ text, background, media })
         });
         if (!response.ok) throw new Error('Error al actualizar contenido');
       } catch (error) {
@@ -152,7 +155,7 @@
         });
         if (!response.ok) throw new Error('Error al subir archivo');
         const { path } = await response.json();
-        await setContent('media', `${backendUrl}${path}`);
+        await setState({ media: path });
         fileInput.value = '';
       } catch (error) {
         alert('Error: ' + error.message);
@@ -160,13 +163,16 @@
     }
 
     function setColor(color) {
-      setContent('color', color);
-      document.getElementById('text-preview').style.backgroundColor = color;
-      document.getElementById('text-preview').style.animation = 'none';
+      currentBackground = { type: 'color', value: color };
+      setState({ background: currentBackground });
+      const preview = document.getElementById('text-preview');
+      preview.style.backgroundColor = color;
+      preview.style.animation = 'none';
     }
 
     function setAnimatedBackground(colors) {
-      setContent('animatedBackground', colors);
+      currentBackground = { type: 'animatedBackground', value: colors };
+      setState({ background: currentBackground });
       const preview = document.getElementById('text-preview');
       preview.style.setProperty('--color1', colors[0]);
       preview.style.setProperty('--color2', colors[1]);
@@ -220,7 +226,7 @@
         return;
       }
       const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
-      setContent('text', textConfig);
+      setState({ text: textConfig, background: currentBackground, media: null });
     });
 
     document.getElementById('custom-text').addEventListener('input', updateTextPreview);
