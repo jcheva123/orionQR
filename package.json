@@ -1,0 +1,25 @@
+{
+  "name": "orionqr",
+  "version": "1.0.0",
+  "main": "totem-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "multer": "^1.4.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcheva123/orionQR.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jcheva123/orionQR/issues"
+  },
+  "homepage": "https://github.com/jcheva123/orionQR#readme",
+  "description": ""
+}
