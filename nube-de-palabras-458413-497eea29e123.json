@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "nube-de-palabras-458413",
+  "private_key_id": "497eea29e123cc20d6727061424ffe61b1b02f36",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCmNUS4Oc4iqhB9\nLOSXMCQlk01WoQD6mP7CYwfcQFFYn9/MAXCvYHBmxpy0Gw7PhJt6h68EMVDcJIbm\n/r2juo9/vbEZHK5CMQSqBtCeYSOGRJE6KmLvjyJVA0TkxEr3Z8HPT6r4Kie/hlG8\nhID3LGnxQaQ6zM3qFT7GkvjiHhQEN/mOMXLXiaGuPTOMLG4NRtjvaIJ44g8P1Dhu\nOoOSVNaMs3dAoZr8pRVn6iEIYP0QCgCRcTTNIT0EBTO45RMXRGA06/xAiHIfxu0W\n/QzBPaUHZX+FEN+jE/Jvqh9FI2gMBWNxiHHOX+pOENfNvg/YXVUSB6P3jMfWhFaV\nQR9WluzzAgMBAAECggEAFPfPvBK60SpgRdJrN4braybKpnJNs8+nsBvwisDod5ma\nZlu2J2yEsZ/pIVrv2Dkz/ituO8VW8fbVDVY3fsIom/vGgv2tyYxH44VUPe7Q8v2P\nzrqN3F1T06LDxxKGcfDP2q4Dynv9o2QNcrl1UE7KQhU/DpX2J6ECLZNZZ6QAxXPw\nJXo2vPZ+FwMXz39YRSlgt+dDCQSGB0kwQZiF1dN8jhrT9BE5zpYdiPndfjV3vcmM\ni/pOw8W1DjXF+eocAgtpROBvdRE1WwZbamjxKO5WjqOkxQSfmVcnuALSKrhhM8Bs\nnQ5UzbAWFBDiQAYdVQNqZlhRphSn7yYLuWl9zt19HQKBgQDdY6QfqEgbAqfiGUI6\nkG0USMB3xJQqm+1hMvPK2QJhEolCEf4T/BKx5yAB0tF38SrWKmjFsSlJnJL1gA4H\np+oMfNk35rr9EUSw8Ykp/TCBCeoGiHZt8JlBdcUwMpD0Ak4WJQTGodfquBrHb/nX\nOZw+BD/CIIqLOQ6rLw8EJBlfZQKBgQDAMTANKnBtw+Y7Hxo+KinedJbZReByHbav\nrWddQKHk2YE1NhMjgy2AR9x+lZ2JoiMauqDUBteS15smdP0nFJtbGu7ayJ7ZdWDB\nS8eH/DLEQIryYPgexKBR/vs6Jvxe/TaWEuCygasfjP5JBZOg7TaC0aX3mEHXGkDD\nIPcb6fBxdwKBgGu8ssEpLrXeS/7u1dkUMdEeOnPOeWBm81VK63M6ujqtP5ikkuX8\n1Mg4ts3MX12kQnlouAYE2hfVl3rbb3hwUaj0FO1sXnELN0d4s4x4h2M0hOva+u8z\nmBFQE78JzJrCiGekajeTyTSTlYyaxJXlllBj1vdMyL9J7AaIZyFXw/U1AoGBALGV\nwZyotjH2bWn7lzgRpZZTjH8+veEz63XweC4GZpEbGPSd/pk1wHlj7S1Z+bMPCfjM\nsYa4u8CHUGj8eF4AAHzyKfomngC5IKn652eTdSU5rim/yARGEw0w2dol49OxjRqm\nXtESV5hTozK94Gc2SMQgC4b4PP4Q1/51G1/DjdSJAoGBAKLCiyGvEWrdm+P0y8u0\nMRQd2s4X9rfzrOVNpLdP/FODnwbhyUB+HLnDEOeFiFAOHr7KnlJ+lFklEWJpGm+M\nJ8/Nd1m+czLd7Hkfwg43OwEJUXyq8mFEjM75I2QqkPSbsaom81JAVqzjiA3rVFET\n9dtvrckbkTsuqh5V2yalUTHE\n-----END PRIVATE KEY-----\n",
+  "client_email": "nube-palabras-service@nube-de-palabras-458413.iam.gserviceaccount.com",
+  "client_id": "114625565964425317738",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/nube-palabras-service%40nube-de-palabras-458413.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
