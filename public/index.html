@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrionQR - Control Totem</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background-color: #F8E1E9; }
+    #admin-panel { display: none; }
+  </style>
+</head>
+<body class="font-['Playfair_Display'] text-gray-800">
+  <div class="min-h-screen flex flex-col items-center justify-center p-4">
+    <h1 class="text-3xl text-[#D4A017] mb-6">OrionQR - Control Totem LED</h1>
+    <input id="admin-password" type="password" placeholder="Contraseña" class="w-full max-w-md p-2 mb-4 border rounded">
+    
+    <div id="admin-panel" class="w-full max-w-md bg-white p-6 rounded shadow">
+      <h2 class="text-2xl mb-4">Opciones</h2>
+      
+      <div class="mb-6">
+        <h3 class="text-xl mb-2">Cargar Foto/Video</h3>
+        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4" class="w-full p-2 border rounded">
+        <button id="upload-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Subir y Mostrar</button>
+      </div>
+      
+      <div class="mb-6">
+        <h3 class="text-xl mb-2">Mostrar Mensajes</h3>
+        <button id="messages-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Activar Mensajes</button>
+      </div>
+      
+      <div>
+        <h3 class="text-xl mb-2">Color de Fondo</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <button class="bg-black text-white p-2 rounded" onclick="setColor('black')">Negro (Apagar)</button>
+          <button class="bg-red-500 text-white p-2 rounded" onclick="setColor('red')">Rojo</button>
+          <button class="bg-blue-500 text-white p-2 rounded" onclick="setColor('blue')">Azul</button>
+          <button class="bg-green-500 text-white p-2 rounded" onclick="setColor('green')">Verde</button>
+          <button class="bg-yellow-500 text-white p-2 rounded" onclick="setColor('yellow')">Amarillo</button>
+          <button class="bg-[#F8E1E9] text-gray-800 p-2 rounded border" onclick="setColor('#F8E1E9')">Rosa</button>
+        </div>
+        <input id="custom-color" type="color" class="mt-2 w-full h-10">
+        <button id="custom-color-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Color Personalizado</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const backendUrl = 'http://localhost:4000'; // Cambiar a URL de ngrok o servidor remoto
+    const messagesUrl = 'http://localhost:3000'; // Cambiar a URL pública si es necesario
+
+    async function setContent(type, value) {
+      try {
+        const response = await fetch(`${backendUrl}/state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, value })
+        });
+        if (!response.ok) throw new Error('Error al actualizar contenido');
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    async function uploadMedia() {
+      const fileInput = document.getElementById('media-upload');
+      if (!fileInput.files[0]) {
+        alert('Selecciona un archivo');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('media', fileInput.files[0]);
+      try {
+        const response = await fetch(`${backendUrl}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        if (!response.ok) throw new Error('Error al subir archivo');
+        const { path } = await response.json();
+        await setContent('media', `${backendUrl}${path}`);
+        fileInput.value = '';
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    async function showMessages() {
+      try {
+        const response = await fetch(`${messagesUrl}/mensajes`);
+        if (!response.ok) throw new Error('Error al cargar mensajes');
+        const messages = await response.json();
+        await setContent('messages', messages);
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    function setColor(color) {
+      setContent('color', color);
+    }
+
+    document.getElementById('admin-password').addEventListener('input', (e) => {
+      if (e.target.value === 'admin123') { // Cambia esta contraseña
+        document.getElementById('admin-panel').style.display = 'block';
+      }
+    });
+
+    document.getElementById('upload-btn').addEventListener('click', uploadMedia);
+    document.getElementById('messages-btn').addEventListener('click', showMessages);
+    document.getElementById('custom-color-btn').addEventListener('click', () => {
+      const color = document.getElementById('custom-color').value;
+      setColor(color);
+    });
+  </script>
+</body>
+</html>

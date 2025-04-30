@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=256, initial-scale=1.0">
+  <title>OrionQR - Totem LED</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+  <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Parisienne&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background-color: #F8E1E9; width: 256px; height: 704px; overflow: hidden; }
+    #content { width: 256px; height: 704px; display: flex; align-items: center; justify-content: center; }
+    .swiper-slide { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 704px; }
+    .animate-fade { animation: fade 2s infinite; }
+    @keyframes fade { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+  <script>
+    let currentState = {};
+    const backendUrl = 'http://localhost:4000'; // Cambiar a URL de ngrok o servidor remoto
+
+    async function fetchState() {
+      try {
+        const response = await fetch(`${backendUrl}/state`);
+        if (!response.ok) throw new Error('Error al cargar estado');
+        currentState = await response.json();
+        updateContent();
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('content').innerHTML = '<p class="text-red-500 text-center">Error al cargar contenido</p>';
+      }
+    }
+
+    function updateContent() {
+      const contentDiv = document.getElementById('content');
+      contentDiv.innerHTML = '';
+
+      if (currentState.type === 'color') {
+        contentDiv.style.backgroundColor = currentState.value;
+      } else if (currentState.type === 'media') {
+        if (currentState.value.endsWith('.mp4')) {
+          contentDiv.innerHTML = `
+            <video autoplay loop muted class="max-w-full max-h-full">
+              <source src="${currentState.value}" type="video/mp4">
+            </video>`;
+        } else {
+          contentDiv.innerHTML = `<img src="${currentState.value}" class="max-w-full max-h-full animate-fade">`;
+        }
+      } else if (currentState.type === 'messages') {
+        contentDiv.innerHTML = `<div class="swiper-container w-full h-full"><div class="swiper-wrapper"></div></div>`;
+        const wrapper = contentDiv.querySelector('.swiper-wrapper');
+        currentState.messages.filter(m => m.approved).forEach(message => {
+          const [messageText, signature] = message.text.split(' - ');
+          const slide = document.createElement('div');
+          slide.className = 'swiper-slide';
+          slide.innerHTML = `
+            <div class="text-center p-4 max-w-[240px]">
+              <p class="text-4xl font-['Dancing_Script'] text-[#4A4A4A] mb-4">${messageText}</p>
+              <p class="text-3xl font-['Parisienne'] text-[#D4A017] italic">${signature || 'Anónimo'}</p>
+            </div>`;
+          wrapper.appendChild(slide);
+        });
+        new Swiper('.swiper-container', {
+          loop: true,
+          autoplay: { delay: 10000 },
+          effect: 'fade',
+          fadeEffect: { crossFade: true }
+        });
+      }
+    }
+
+    // Carga inicial y actualización cada 10 segundos
+    fetchState();
+    setInterval(fetchState, 10000);
+  </script>
+</body>
+</html>
