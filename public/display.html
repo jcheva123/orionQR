@@ -84,28 +84,37 @@
       mediaContent.style.display = 'none';
       mediaContentVideo.style.display = 'none';
 
-      if (state.type === 'color') {
-        document.body.style.backgroundColor = state.value;
-      } else if (state.type === 'animatedBackground') {
-        const colors = state.value;
-        document.body.style.setProperty('--color1', colors[0]);
-        document.body.style.setProperty('--color2', colors[1]);
-        document.body.style.setProperty('--color3', colors[2] || colors[0]);
-        document.body.style.animation = 'backgroundAnimation 15s infinite';
-      } else if (state.type === 'media') {
-        if (state.value.endsWith('.mp4')) {
-          videoSource.src = state.value;
+      // Apply background
+      if (state.background) {
+        if (state.background.type === 'color') {
+          document.body.style.backgroundColor = state.background.value;
+        } else if (state.background.type === 'animatedBackground') {
+          const colors = state.background.value;
+          document.body.style.setProperty('--color1', colors[0]);
+          document.body.style.setProperty('--color2', colors[1]);
+          document.body.style.setProperty('--color3', colors[2] || colors[0]);
+          document.body.style.animation = 'backgroundAnimation 15s infinite';
+        }
+      }
+
+      // Apply media
+      if (state.media) {
+        if (state.media.endsWith('.mp4')) {
+          videoSource.src = state.media;
           mediaContentVideo.load();
           mediaContentVideo.style.display = 'block';
           mediaContentVideo.style.width = '100%';
           mediaContentVideo.style.height = '100%';
           mediaContentVideo.style.objectFit = 'contain';
         } else {
-          mediaContent.src = state.value;
+          mediaContent.src = state.media;
           mediaContent.style.display = 'block';
         }
-      } else if (state.type === 'text') {
-        const { text, font, size, color, position } = state.value;
+      }
+
+      // Apply text
+      if (state.text) {
+        const { text, font, size, color, position } = state.text;
         textContent.textContent = text;
         textContent.style.fontFamily = `'${font}', serif`;
         textContent.style.fontSize = `${size}px`;
