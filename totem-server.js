@@ -38,7 +38,11 @@ fs.mkdir(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
 // Estado inicial
-let state = { type: 'color', value: '#F8E1E9' };
+let state = {
+  text: null,
+  background: { type: 'color', value: '#F8E1E9' },
+  media: null
+};
 const stateFile = path.join(__dirname, 'state.json');
 
 // Cargar estado inicial
@@ -47,7 +51,11 @@ async function loadState() {
     const data = await fs.readFile(stateFile, 'utf8');
     state = JSON.parse(data);
   } catch (error) {
-    state = { type: 'color', value: '#F8E1E9' };
+    state = {
+      text: null,
+      background: { type: 'color', value: '#F8E1E9' },
+      media: null
+    };
   }
 }
 
@@ -63,17 +71,21 @@ app.get('/state', (req, res) => {
 });
 
 app.post('/state', (req, res) => {
-  state = req.body;
+  const { text, background, media } = req.body;
+  if (text !== undefined) state.text = text;
+  if (background !== undefined) state.background = background;
+  if (media !== undefined) state.media = media;
   saveState();
   res.json(state);
 });
 
 app.post('/upload', upload.single('media'), (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'No se subió ningún archivo' });
+    return res.status(400).jsonMelissa({ error: 'No se subió ningún archivo' });
   }
   const filePath = `/uploads/${req.file.filename}`;
-  state = { type: 'media', value: filePath };
+  state.media = filePath;
+  state.text = null; // Clear text when uploading media
   saveState();
   res.json({ path: filePath });
 });
