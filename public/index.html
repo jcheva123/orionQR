@@ -155,7 +155,8 @@
         });
         if (!response.ok) throw new Error('Error al subir archivo');
         const { path } = await response.json();
-        await setState({ media: path, text: null, background: currentBackground });
+        const fullMediaUrl = `${backendUrl}${path}`; // Construct full URL using backendUrl
+        await setState({ media: fullMediaUrl, text: null, background: currentBackground });
         fileInput.value = '';
       } catch (error) {
         alert('Error: ' + error.message);
