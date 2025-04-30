@@ -2,80 +2,108 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=256, initial-scale=1.0">
-  <title>OrionQR - Totem LED</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
-  <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Parisienne&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrionQR Totem Display</title>
   <style>
-    body { background-color: #F8E1E9; width: 256px; height: 704px; overflow: hidden; }
-    #content { width: 256px; height: 704px; display: flex; align-items: center; justify-content: center; }
-    .swiper-slide { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 704px; }
-    .animate-fade { animation: fade 2s infinite; }
-    @keyframes fade { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #F8E1E9;
+      overflow: hidden;
+      width: 256px;
+      height: 704px;
+    }
+    #videoElement, #imageElement, #messageElement {
+      width: 256px;
+      height: 704px;
+      object-fit: contain;
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #messageElement {
+      font-family: 'Dancing Script', cursive;
+      font-size: 48px;
+      color: #4A4A4A;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #F8E1E9;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .fade-in {
+      animation: fadeIn 1s ease-in;
+    }
   </style>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Parisienne&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="content"></div>
+  <video id="videoElement" autoplay loop muted playsinline>
+    <source id="videoSource" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <img id="imageElement" alt="Media">
+  <div id="messageElement"></div>
   <script>
-    let currentState = {};
-    const backendUrl = 'https://orionqr.onrender.com'; // Cambiar a URL de ngrok o servidor remoto
+    const backendUrl = 'https://orionqr.onrender.com';
 
-    async function fetchState() {
+    async function updateDisplay() {
       try {
         const response = await fetch(`${backendUrl}/state`);
-        if (!response.ok) throw new Error('Error al cargar estado');
-        currentState = await response.json();
-        updateContent();
-      } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('content').innerHTML = '<p class="text-red-500 text-center">Error al cargar contenido</p>';
-      }
-    }
+        if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+        const state = await response.json();
 
-    function updateContent() {
-      const contentDiv = document.getElementById('content');
-      contentDiv.innerHTML = '';
+        const videoElement = document.getElementById('videoElement');
+        const videoSource = document.getElementById('videoSource');
+        const imageElement = document.getElementById('imageElement');
+        const messageElement = document.getElementById('messageElement');
 
-      if (currentState.type === 'color') {
-        contentDiv.style.backgroundColor = currentState.value;
-      } else if (currentState.type === 'media') {
-        if (currentState.value.endsWith('.mp4')) {
-          contentDiv.innerHTML = `
-<video id="media" autoplay loop muted playsinline style="display: none; width: 256px; height: 704px; object-fit: contain;">
-  <source id="videoSource" src="" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-        } else {
-          contentDiv.innerHTML = `<img src="${currentState.value}" class="max-w-full max-h-full animate-fade">`;
+        // Ocultar todos los elementos inicialmente
+        videoElement.style.display = 'none';
+        imageElement.style.display = 'none';
+        messageElement.style.display = 'none';
+        videoSource.src = '';
+        imageElement.src = '';
+
+        if (state.type === 'media') {
+          const mediaUrl = `${backendUrl}${state.value}`;
+          if (mediaUrl.endsWith('.mp4')) {
+            videoSource.src = mediaUrl;
+            videoElement.load();
+            videoElement.style.display = 'block';
+            videoElement.classList.add('fade-in');
+            videoElement.play().catch(error => {
+              console.error('Error playing video:', error);
+              alert('No se pudo reproducir el video. Verifica el formato o la conexión.');
+            });
+          } else if (mediaUrl.endsWith('.jpg') || mediaUrl.endsWith('.png')) {
+            imageElement.src = mediaUrl;
+            imageElement.style.display = 'block';
+            imageElement.classList.add('fade-in');
+          }
+        } else if (state.type === 'messages') {
+          messageElement.textContent = state.value; // Asume un mensaje
+          messageElement.style.display = 'flex';
+          messageElement.classList.add('fade-in');
+          // Alternar fuentes para variedad
+          messageElement.style.fontFamily = state.index % 2 === 0 ? "'Dancing Script', cursive" : "'Parisienne', cursive";
+          messageElement.style.fontSize = state.index % 2 === 0 ? '48px' : '36px';
+        } else if (state.type === 'color') {
+          document.body.style.backgroundColor = state.value;
         }
-      } else if (currentState.type === 'messages') {
-        contentDiv.innerHTML = `<div class="swiper-container w-full h-full"><div class="swiper-wrapper"></div></div>`;
-        const wrapper = contentDiv.querySelector('.swiper-wrapper');
-        currentState.messages.filter(m => m.approved).forEach(message => {
-          const [messageText, signature] = message.text.split(' - ');
-          const slide = document.createElement('div');
-          slide.className = 'swiper-slide';
-          slide.innerHTML = `
-            <div class="text-center p-4 max-w-[240px]">
-              <p class="text-4xl font-['Dancing_Script'] text-[#4A4A4A] mb-4">${messageText}</p>
-              <p class="text-3xl font-['Parisienne'] text-[#D4A017] italic">${signature || 'Anónimo'}</p>
-            </div>`;
-          wrapper.appendChild(slide);
-        });
-        new Swiper('.swiper-container', {
-          loop: true,
-          autoplay: { delay: 10000 },
-          effect: 'fade',
-          fadeEffect: { crossFade: true }
-        });
+      } catch (error) {
+        console.error('Error updating display:', error);
       }
     }
 
-    // Carga inicial y actualización cada 10 segundos
-    fetchState();
-    setInterval(fetchState, 10000);
+    // Actualizar cada 10 segundos
+    setInterval(updateDisplay, 10000);
+    updateDisplay();
   </script>
 </body>
 </html>
