@@ -84,7 +84,11 @@ app.post('/upload', upload.single('media'), async (req, res) => {
     const shareLink = await dbx.sharingCreateSharedLinkWithSettings({
       path: response.result.path_display
     });
-    const mediaUrl = shareLink.result.url.replace('dl=0', 'dl=1'); // URL para descarga directa
+   const mediaUrl = shareLink.result.url
+  .replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+  .replace('?dl=0', '')
+  .replace('?dl=1', '');
+ // URL para descarga directa
 
     state.media = mediaUrl;
     state.text = null;
