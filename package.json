@@ -10,5 +10,6 @@
     "cors": "^2.8.5",
     "googleapis": "^148.0.0",
     "dropbox": "^10.34.0"
+    "cloudinary": "^2.5.0"
   }
 }
