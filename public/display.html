@@ -112,7 +112,6 @@
           mediaContentVideo.style.display = 'block';
           mediaContentVideo.play().catch(error => {
             console.error('Video playback error:', error.message);
-            // Retry playback after a short delay
             setTimeout(() => mediaContentVideo.play(), 1000);
           });
         } else {
@@ -123,7 +122,7 @@
         // Apply text if no media is present
         const { text, font, size, color, position } = state.text;
         textContent.textContent = text;
-        textContent.style.fontFamily = `'${font}', serif`;
+        textContent.style.fontFamily = `'${font}', serif';
         textContent.style.fontSize = `${size}px`;
         textContent.style.color = color;
         textContent.style.top = `${position}%`;
@@ -145,7 +144,6 @@
     // Error handling for video
     mediaContentVideo.addEventListener('error', (e) => {
       console.error('Video error:', e);
-      // Attempt to reload the video
       mediaContentVideo.load();
       mediaContentVideo.play().catch(error => {
         console.error('Video reload error:', error.message);
