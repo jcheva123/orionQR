@@ -3,20 +3,19 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs').promises;
+const { Dropbox } = require('dropbox');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuración de Multer para subir archivos
+// Configuración de Multer para manejar la subida temporal
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'Uploads');
+    cb(null, 'temp'); // Carpeta temporal para procesar el archivo
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = Date.now() + '-' + Math.random().toString(36).substring(2, 15) + ext;
-    cb(null, name);
+    cb(null, file.originalname);
   }
 });
 
@@ -30,12 +29,11 @@ const upload = multer({
       cb(new Error('Formato no permitido. Usa JPEG, PNG, MP4 o MOV.'));
     }
   },
-  limits: { fileSize: 100 * 1024 * 1024 }
+  limits: { fileSize: 100 * 1024 * 1024 } // Límite de 100 MB
 });
 
-const uploadsDir = path.join(__dirname, 'Uploads');
+const uploadsDir = path.join(__dirname, 'temp');
 fs.mkdir(uploadsDir, { recursive: true });
-app.use('/uploads', express.static(uploadsDir));
 
 // Estado inicial
 let state = {
@@ -45,17 +43,12 @@ let state = {
 };
 const stateFile = path.join(__dirname, 'state.json');
 
-// Cargar estado inicial
 async function loadState() {
   try {
     const data = await fs.readFile(stateFile, 'utf8');
     state = JSON.parse(data);
   } catch (error) {
-    state = {
-      text: null,
-      background: { type: 'color', value: '#F8E1E9' },
-      media: null
-    };
+    // Mantén el estado inicial
   }
 }
 
@@ -65,7 +58,46 @@ async function saveState() {
 
 loadState();
 
-// Endpoints
+// Configura el cliente de Dropbox con el access token generado
+const dbx = new Dropbox({
+  clientId: 'nsuaumqkjz76k05',
+  clientSecret: '9v9z75jb04q9klc',
+  accessToken: process.env.DROPBOX_ACCESS_TOKEN, // Usar variable de entorno para mayor seguridad
+  fetch: fetch // Usar fetch nativo de Node.js
+});
+
+// Endpoint para subir archivos a Dropbox
+app.post('/upload', upload.single('media'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No se subió ningún archivo' });
+  }
+  try {
+    // Sube el archivo a la carpeta 'orionQR'
+    const fileContent = await fs.readFile(req.file.path);
+    const response = await dbx.filesUpload({
+      path: '/orionQR/' + req.file.originalname, // Sube a la carpeta orionQR
+      contents: fileContent,
+      autorename: true // Renombra si el archivo ya existe
+    });
+
+    // Obtén la URL compartida
+    const shareLink = await dbx.sharingCreateSharedLinkWithSettings({
+      path: response.result.path_display
+    });
+    const mediaUrl = shareLink.result.url.replace('dl=0', 'dl=1'); // URL para descarga directa
+
+    state.media = mediaUrl;
+    state.text = null;
+    await saveState();
+    // Elimina el archivo temporal
+    await fs.unlink(req.file.path);
+    res.json({ path: mediaUrl });
+  } catch (error) {
+    console.error('Error subiendo a Dropbox:', error);
+    res.status(500).json({ error: 'Error al subir a Dropbox: ' + error.message });
+  }
+});
+
 app.get('/state', (req, res) => {
   res.json(state);
 });
@@ -77,17 +109,6 @@ app.post('/state', (req, res) => {
   if (media !== undefined) state.media = media;
   saveState();
   res.json(state);
-});
-
-app.post('/upload', upload.single('media'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No se subió ningún archivo' });
-  }
-  const filePath = `/uploads/${req.file.filename}`;
-  state.media = filePath;
-  state.text = null; // Clear text when uploading media
-  saveState();
-  res.json({ path: filePath });
 });
 
 const PORT = process.env.PORT || 4000;
