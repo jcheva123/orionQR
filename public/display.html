@@ -130,6 +130,20 @@
                 }, 1000);
               }
             });
+
+            // Fallback loop mechanism: Check if video is near the end
+            mediaContentVideo.addEventListener('loadedmetadata', () => {
+              const duration = mediaContentVideo.duration;
+              if (duration) {
+                setInterval(() => {
+                  if (currentMediaUrl === state.media && mediaContentVideo.currentTime >= duration - 0.1) {
+                    console.log('Fallback: Video near end, forcing loop...');
+                    mediaContentVideo.currentTime = 0;
+                    mediaContentVideo.play().catch(err => console.error('Fallback replay error:', err.message));
+                  }
+                }, 100);
+              }
+            }, { once: true });
           } else {
             mediaContent.src = state.media;
             mediaContent.style.display = 'block';
@@ -165,7 +179,7 @@
     // Manual video looping
     const mediaContentVideo = document.getElementById('media-content-video');
     mediaContentVideo.addEventListener('ended', () => {
-      console.log('Video ended, replaying...');
+      console.log('Video ended event triggered, replaying...');
       if (currentMediaUrl && mediaContentVideo.src.includes(currentMediaUrl)) {
         mediaContentVideo.currentTime = 0;
         mediaContentVideo.play().catch(error => {
@@ -197,6 +211,14 @@
           }
         });
       }
+    });
+
+    // Debug video state
+    mediaContentVideo.addEventListener('pause', () => {
+      console.log('Video paused, currentTime:', mediaContentVideo.currentTime);
+    });
+    mediaContentVideo.addEventListener('play', () => {
+      console.log('Video playing, currentTime:', mediaContentVideo.currentTime);
     });
 
     // Fetch state every 2 seconds
