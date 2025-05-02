@@ -49,7 +49,7 @@
       
       <div class="mb-6">
         <h3 class="text-xl mb-2">Cargar Foto/Video</h3>
-        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4" class="w-full p-2 border rounded">
+        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="w-full p-2 border rounded">
         <button id="upload-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Subir y Mostrar</button>
       </div>
       
@@ -155,7 +155,7 @@
         });
         if (!response.ok) throw new Error('Error al subir archivo');
         const { path } = await response.json();
-        const fullMediaUrl = `${backendUrl}${path}`; // Construct full URL using backendUrl
+        const fullMediaUrl = `${backendUrl}${path}`;
         await setState({ media: fullMediaUrl, text: null, background: currentBackground });
         fileInput.value = '';
       } catch (error) {
