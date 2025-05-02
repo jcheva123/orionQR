@@ -41,7 +41,7 @@
       66% { background-color: var(--color3, var(--color1)); }
       100% { background-color: var(--color1); }
     }
-    #media-content, #media-content-video {
+    #media-content, #video-frame-content {
       width: 100%;
       height: 100%;
       object-fit: contain;
@@ -57,13 +57,18 @@
   <div id="content">
     <div id="text-content"></div>
     <img id="media-content" alt="Media">
-    <video id="media-content-video" autoplay muted playsinline>
+    <img id="video-frame-content" alt="Video Frame">
+    <video id="media-content-video" muted playsinline style="display: none;">
       <source id="video-source" type="video/mp4">
     </video>
   </div>
 
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
+    const FRAME_RATE = 10; // 10 fps for the slideshow
+    let videoFrames = [];
+    let currentFrameIndex = 0;
+    let frameInterval = null;
 
     async function fetchState() {
       try {
@@ -80,6 +85,7 @@
       const textContent = document.getElementById('text-content');
       const mediaContent = document.getElementById('media-content');
       const mediaContentVideo = document.getElementById('media-content-video');
+      const videoFrameContent = document.getElementById('video-frame-content');
       const videoSource = document.getElementById('video-source');
 
       // Reset display
@@ -88,7 +94,8 @@
       textContent.style.display = 'none';
       mediaContent.style.display = 'none';
       mediaContentVideo.style.display = 'none';
-      mediaContentVideo.pause();
+      videoFrameContent.style.display = 'none';
+      stopVideoFrameAnimation();
 
       // Apply background
       if (state.background) {
@@ -107,15 +114,12 @@
       if (state.media) {
         console.log('Media URL:', state.media);
         if (state.media.endsWith('.mp4')) {
+          // Load video to extract frames
           videoSource.src = state.media;
           mediaContentVideo.load();
-          mediaContentVideo.style.display = 'block';
-          mediaContentVideo.play().catch(error => {
-            console.error('Video playback error:', error.message);
-            // Retry playback after a short delay
-            setTimeout(() => mediaContentVideo.play(), 1000);
-          });
+          extractVideoFrames(mediaContentVideo, videoFrameContent);
         } else {
+          // Display static image
           mediaContent.src = state.media;
           mediaContent.style.display = 'block';
         }
@@ -132,25 +136,73 @@
       }
     }
 
-    // Manual video looping
-    const mediaContentVideo = document.getElementById('media-content-video');
-    mediaContentVideo.addEventListener('ended', () => {
-      console.log('Video ended, replaying...');
-      mediaContentVideo.currentTime = 0;
-      mediaContentVideo.play().catch(error => {
-        console.error('Video replay error:', error.message);
-      });
-    });
+    function extractVideoFrames(video, frameDisplay) {
+      videoFrames = [];
+      currentFrameIndex = 0;
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 256;
+      canvas.height = 704;
 
-    // Error handling for video
-    mediaContentVideo.addEventListener('error', (e) => {
-      console.error('Video error:', e);
-      // Attempt to reload the video
-      mediaContentVideo.load();
-      mediaContentVideo.play().catch(error => {
-        console.error('Video reload error:', error.message);
+      // Wait for video metadata to load
+      video.addEventListener('loadedmetadata', () => {
+        const duration = video.duration;
+        const frameIntervalSeconds = 1 / FRAME_RATE;
+        let currentTime = 0;
+
+        function captureFrame() {
+          if (currentTime > duration) {
+            // Done capturing frames, start animation
+            console.log('Captured frames:', videoFrames.length);
+            animateVideoFrames(frameDisplay);
+            return;
+          }
+
+          video.currentTime = currentTime;
+        }
+
+        video.addEventListener('seeked', () => {
+          // Draw the current frame to the canvas
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          videoFrames.push(canvas.toDataURL('image/jpeg'));
+          currentTime += frameIntervalSeconds;
+          captureFrame();
+        });
+
+        video.addEventListener('error', (e) => {
+          console.error('Video error during frame extraction:', e);
+        });
+
+        // Start capturing frames
+        captureFrame();
       });
-    });
+
+      video.addEventListener('error', (e) => {
+        console.error('Video load error:', e);
+      });
+    }
+
+    function animateVideoFrames(frameDisplay) {
+      if (videoFrames.length === 0) return;
+
+      frameDisplay.style.display = 'block';
+      frameDisplay.src = videoFrames[currentFrameIndex];
+      currentFrameIndex = (currentFrameIndex + 1) % videoFrames.length;
+
+      frameInterval = setInterval(() => {
+        frameDisplay.src = videoFrames[currentFrameIndex];
+        currentFrameIndex = (currentFrameIndex + 1) % videoFrames.length;
+      }, 1000 / FRAME_RATE);
+    }
+
+    function stopVideoFrameAnimation() {
+      if (frameInterval) {
+        clearInterval(frameInterval);
+        frameInterval = null;
+      }
+      videoFrames = [];
+      currentFrameIndex = 0;
+    }
 
     // Fetch state every 2 seconds
     fetchState();
