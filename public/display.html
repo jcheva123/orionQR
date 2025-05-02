@@ -57,7 +57,7 @@
   <div id="content">
     <div id="text-content"></div>
     <img id="media-content" alt="Media">
-    <video id="media-content-video" autoplay loop muted playsinline>
+    <video id="media-content-video" autoplay muted playsinline>
       <source id="video-source" type="video/mp4">
     </video>
   </div>
@@ -72,7 +72,7 @@
         const state = await response.json();
         updateDisplay(state);
       } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error fetching state:', error.message);
       }
     }
 
@@ -88,6 +88,7 @@
       textContent.style.display = 'none';
       mediaContent.style.display = 'none';
       mediaContentVideo.style.display = 'none';
+      mediaContentVideo.pause();
 
       // Apply background
       if (state.background) {
@@ -104,11 +105,16 @@
 
       // Apply media if present
       if (state.media) {
-        console.log('Media URL:', state.media); // Debug log
+        console.log('Media URL:', state.media);
         if (state.media.endsWith('.mp4')) {
           videoSource.src = state.media;
           mediaContentVideo.load();
           mediaContentVideo.style.display = 'block';
+          mediaContentVideo.play().catch(error => {
+            console.error('Video playback error:', error.message);
+            // Retry playback after a short delay
+            setTimeout(() => mediaContentVideo.play(), 1000);
+          });
         } else {
           mediaContent.src = state.media;
           mediaContent.style.display = 'block';
@@ -125,6 +131,26 @@
         textContent.style.display = 'block';
       }
     }
+
+    // Manual video looping
+    const mediaContentVideo = document.getElementById('media-content-video');
+    mediaContentVideo.addEventListener('ended', () => {
+      console.log('Video ended, replaying...');
+      mediaContentVideo.currentTime = 0;
+      mediaContentVideo.play().catch(error => {
+        console.error('Video replay error:', error.message);
+      });
+    });
+
+    // Error handling for video
+    mediaContentVideo.addEventListener('error', (e) => {
+      console.error('Video error:', e);
+      // Attempt to reload the video
+      mediaContentVideo.load();
+      mediaContentVideo.play().catch(error => {
+        console.error('Video reload error:', error.message);
+      });
+    });
 
     // Fetch state every 2 seconds
     fetchState();
