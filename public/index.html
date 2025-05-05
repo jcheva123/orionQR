@@ -1,284 +1,128 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OrionQR - Control Totem</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      background: linear-gradient(135deg, #0d0d0d, #1a1a2e);
-      color: #e0e0e0;
-      overflow-x: hidden;
-    }
-    #admin-panel { display: none; }
-    .text-preview {
-      width: 100%;
-      max-width: 256px;
-      height: 704px;
-      background: rgba(0, 0, 0, 0.8);
-      border: 2px solid #00d4ff;
-      border-radius: 10px;
-      position: relative;
-      overflow: hidden;
-      margin: 1rem auto;
-    }
-    .preview-text {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      white-space: pre-wrap;
-      color: #00ffcc;
-      text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
-      animation: subtleAnimation 30s infinite;
-    }
-    @keyframes subtleAnimation {
-      0% { opacity: 0; transform: translateY(20px); }
-      5% { opacity: 1; transform: translateY(0); }
-      90% { opacity: 1; transform: translateY(0); }
-      95% { opacity: 0.8; transform: translateY(-10px); }
-      100% { opacity: 0; transform: translateY(20px); }
-    }
-    @keyframes backgroundAnimation {
-      0% { background: linear-gradient(45deg, var(--color1), var(--color2)); }
-      50% { background: linear-gradient(45deg, var(--color2), var(--color3, var(--color1))); }
-      100% { background: linear-gradient(45deg, var(--color1), var(--color2)); }
-    }
-    @keyframes neonGlow {
-      0% { box-shadow: 0 0 5px #00d4ff, 0 0 10px #00d4ff; }
-      50% { box-shadow: 0 0 10px #00ffcc, 0 0 20px #ff00ff; }
-      100% { box-shadow: 0 0 5px #00d4ff, 0 0 10px #00d4ff; }
-    }
-    .tech-button {
-      background: linear-gradient(90deg, #00d4ff, #ff00ff);
-      color: #fff;
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 50px;
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 700;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 0 5px #00d4ff;
-    }
-    .tech-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px #00ffcc, 0 0 30px #ff00ff;
-      animation: neonGlow 1.5s infinite;
-    }
-    .input-field {
-      background: #1a1a2e;
-      border: 1px solid #00d4ff;
-      color: #e0e0e0;
-      border-radius: 8px;
-      padding: 0.5rem;
-    }
-    .input-field:focus {
-      outline: none;
-      border-color: #00ffcc;
-      box-shadow: 0 0 10px #00ffcc;
-    }
-  </style>
-</head>
-<body class="font-['Playfair_Display'] text-gray-200">
-  <div class="min-h-screen flex flex-col items-center justify-center p-4">
-    <h1 class="text-4xl md:text-5xl text-[#00d4ff] mb-6 font-['Orbitron'] shadow-lg">OrionQR - Control Totem</h1>
-    <input id="admin-password" type="password" placeholder="Contraseña" class="input-field w-full max-w-md mb-4">
+const express = require('express');
+const multer = require('multer');
+const cors = require('cors');
+const path = require('path');
+const fs = require('fs').promises;
+const cloudinary = require('cloudinary').v2;
 
-    <div id="admin-panel" class="w-full max-w-md bg-[#0d0d0d] p-6 rounded-lg shadow-lg border border-[#00d4ff]">
-      <h2 class="text-2xl md:text-3xl mb-4 text-[#ff00ff] font-['Orbitron']">Opciones</h2>
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-      <div class="mb-6">
-        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Cargar Foto/Video</h3>
-        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="input-field w-full p-2 mb-2">
-        <button id="upload-btn" class="tech-button w-full">Subir y Mostrar</button>
-      </div>
+// Configuración de Multer para manejo temporal de archivos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'temp'),
+  filename: (req, file, cb) => cb(null, file.originalname)
+});
 
-      <div class="mb-6">
-        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Color de Fondo</h3>
-        <div class="grid grid-cols-3 gap-2">
-          <button class="tech-button p-2" onclick="setColor('black')">Negro</button>
-          <button class="tech-button p-2" onclick="setColor('red')">Rojo</button>
-          <button class="tech-button p-2" onclick="setColor('blue')">Azul</button>
-          <button class="tech-button p-2" onclick="setColor('green')">Verde</button>
-          <button class="tech-button p-2" onclick="setColor('yellow')">Amarillo</button>
-          <button class="tech-button p-2" onclick="setColor('#F8E1E9')">Rosa</button>
-        </div>
-        <input id="custom-color" type="color" class="input-field mt-2 w-full h-10">
-        <button id="custom-color-btn" class="tech-button mt-2 w-full">Aplicar Color</button>
-        <div class="mt-4">
-          <h4 class="text-lg md:text-xl mb-2 text-[#ff00ff]">Fondo Animado</h4>
-          <div class="mb-2">
-            <label class="block mb-1 text-[#00ffcc]">Color 1:</label>
-            <input id="bg-color1" type="color" value="#F8E1E9" class="input-field w-full h-10">
-          </div>
-          <div class="mb-2">
-            <label class="block mb-1 text-[#00ffcc]">Color 2:</label>
-            <input id="bg-color2" type="color" value="#D4A017" class="input-field w-full h-10">
-          </div>
-          <div class="mb-2">
-            <label class="block mb-1 text-[#00ffcc]">Color 3 (opcional):</label>
-            <input id="bg-color3" type="color" value="#FFFFFF" class="input-field w-full h-10">
-          </div>
-          <button id="animated-bg-btn" class="tech-button w-full">Aplicar Fondo</button>
-        </div>
-      </div>
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime'];
+    if (allowedTypes.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Formato no permitido. Usa JPEG, PNG, MP4 o MOV.'));
+  },
+  limits: { fileSize: 100 * 1024 * 1024 }
+});
 
-      <div class="mb-6">
-        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Texto Personalizado</h3>
-        <textarea id="custom-text" rows="3" placeholder="Ej: Boda de Alejo\n& Valentina" class="input-field w-full p-2 mb-2 resize-none"></textarea>
-        <div class="mb-2">
-          <label class="block mb-1 text-[#00ffcc]">Tipografía:</label>
-          <select id="text-font" class="input-field w-full p-2">
-            <option value="Playfair Display">Playfair Display</option>
-            <option value="Orbitron">Orbitron</option>
-            <option value="Roboto">Roboto</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <label class="block mb-1 text-[#00ffcc]">Tamaño del Texto:</label>
-          <select id="text-size" class="input-field w-full p-2">
-            <option value="20">Pequeño (20px)</option>
-            <option value="30">Mediano (30px)</option>
-            <option value="40">Grande (40px)</option>
-            <option value="50">Muy Grande (50px)</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <label class="block mb-1 text-[#00ffcc]">Color del Texto:</label>
-          <input id="text-color" type="color" class="input-field w-full h-10">
-        </div>
-        <div class="mb-2">
-          <label class="block mb-1 text-[#00ffcc]">Posición Vertical:</label>
-          <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
-          <span id="position-value" class="text-sm text-[#00d4ff]">50%</span>
-        </div>
-        <div class="text-preview" id="text-preview">
-          <div class="preview-text" id="preview-text">Texto de ejemplo</div>
-        </div>
-        <button id="text-btn" class="tech-button w-full">Aplicar Texto</button>
-      </div>
-    </div>
-  </div>
+// Crear carpeta temporal
+const uploadsDir = path.join(__dirname, 'temp');
+fs.mkdir(uploadsDir, { recursive: true });
 
-  <script>
-    const backendUrl = 'https://orionqr.onrender.com';
+// Configurar Cloudinary desde variables de entorno
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-    let currentBackground = { type: 'color', value: '#F8E1E9' };
+// Estado inicial
+let state = {
+  text: null,
+  background: { type: 'color', value: '#F8E1E9' },
+  media: null,
+  logo: null
+};
+const stateFile = path.join(__dirname, 'state.json');
 
-    async function setState({ text, background, media }) {
-      try {
-        const response = await fetch(`${backendUrl}/state`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, background, media })
-        });
-        if (!response.ok) throw new Error('Error al actualizar contenido');
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    }
+async function loadState() {
+  try {
+    const data = await fs.readFile(stateFile, 'utf8');
+    state = JSON.parse(data);
+  } catch (error) {
+    // No se pudo cargar estado anterior
+  }
+}
 
-    async function uploadMedia() {
-      const fileInput = document.getElementById('media-upload');
-      if (!fileInput.files[0]) {
-        alert('Selecciona un archivo');
-        return;
-      }
-      const formData = new FormData();
-      formData.append('media', fileInput.files[0]);
-      try {
-        const response = await fetch(`${backendUrl}/upload`, {
-          method: 'POST',
-          body: formData
-        });
-        if (!response.ok) throw new Error('Error al subir archivo');
-        const { path } = await response.json();
-        await setState({ media: path, text: null, background: currentBackground });
-        fileInput.value = '';
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    }
+async function saveState() {
+  await fs.writeFile(stateFile, JSON.stringify(state));
+}
 
-    function setColor(color) {
-      currentBackground = { type: 'color', value: color };
-      setState({ background: currentBackground });
-      const preview = document.getElementById('text-preview');
-      preview.style.backgroundColor = color;
-      preview.style.animation = 'none';
-    }
+loadState();
 
-    function setAnimatedBackground(colors) {
-      currentBackground = { type: 'animatedBackground', value: colors };
-      setState({ background: currentBackground });
-      const preview = document.getElementById('text-preview');
-      preview.style.setProperty('--color1', colors[0]);
-      preview.style.setProperty('--color2', colors[1]);
-      preview.style.setProperty('--color3', colors[2] || colors[0]);
-      preview.style.animation = 'backgroundAnimation 15s infinite';
-    }
-
-    function updateTextPreview() {
-      const text = document.getElementById('custom-text').value || 'Texto de ejemplo';
-      const font = document.getElementById('text-font').value;
-      const size = document.getElementById('text-size').value + 'px';
-      const color = document.getElementById('text-color').value;
-      const position = document.getElementById('text-position').value;
-      const previewText = document.getElementById('preview-text');
-
-      previewText.textContent = text;
-      previewText.style.fontFamily = `'${font}', sans-serif`;
-      previewText.style.fontSize = size;
-      previewText.style.color = color;
-      previewText.style.top = `${position}%`;
-      previewText.style.transform = 'translateY(-50%)';
-    }
-
-    document.getElementById('admin-password').addEventListener('input', (e) => {
-      if (e.target.value === 'admin123') {
-        document.getElementById('admin-panel').style.display = 'block';
-      }
+// Subida de archivos multimedia (fotos/videos)
+app.post('/upload', upload.single('media'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo' });
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'orionQR',
+      resource_type: 'auto',
+      transformation: [
+        { width: 256, height: 704, crop: 'pad', background: 'black' },
+        { quality: 'auto', fetch_format: 'auto' },
+        { bit_rate: '500k' }
+      ]
     });
 
-    document.getElementById('upload-btn').addEventListener('click', uploadMedia);
-    document.getElementById('custom-color-btn').addEventListener('click', () => {
-      const color = document.getElementById('custom-color').value;
-      setColor(color);
+    state.media = result.secure_url;
+    state.text = null;
+    await saveState();
+    await fs.unlink(req.file.path);
+    res.json({ path: result.secure_url });
+  } catch (error) {
+    console.error('Error subiendo a Cloudinary:', error);
+    res.status(500).json({ error: 'Error al subir a Cloudinary: ' + error.message });
+  }
+});
+
+// Subida de logos
+app.post('/upload-logo', upload.single('logo'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No se subió ningún logo' });
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'orionQR/logos',
+      resource_type: 'image',
+      transformation: [
+        { width: 256, height: 704, crop: 'fit' }
+      ]
     });
 
-    document.getElementById('animated-bg-btn').addEventListener('click', () => {
-      const color1 = document.getElementById('bg-color1').value;
-      const color2 = document.getElementById('bg-color2').value;
-      const color3 = document.getElementById('bg-color3').value;
-      setAnimatedBackground([color1, color2, color3]);
-    });
+    state.logo = result.secure_url;
+    await saveState();
+    await fs.unlink(req.file.path);
+    res.json({ path: result.secure_url });
+  } catch (error) {
+    console.error('Error subiendo logo a Cloudinary:', error);
+    res.status(500).json({ error: 'Error al subir logo a Cloudinary: ' + error.message });
+  }
+});
 
-    document.getElementById('text-btn').addEventListener('click', () => {
-      const text = document.getElementById('custom-text').value;
-      const font = document.getElementById('text-font').value;
-      const size = document.getElementById('text-size').value;
-      const color = document.getElementById('text-color').value;
-      const position = document.getElementById('text-position').value;
-      if (!text) {
-        alert('Por favor, ingresa un texto');
-        return;
-      }
-      const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
-      setState({ text: textConfig, background: currentBackground, media: null });
-    });
+// Estado actual
+app.get('/state', (req, res) => {
+  res.json(state);
+});
 
-    document.getElementById('custom-text').addEventListener('input', updateTextPreview);
-    document.getElementById('text-font').addEventListener('change', updateTextPreview);
-    document.getElementById('text-size').addEventListener('change', updateTextPreview);
-    document.getElementById('text-color').addEventListener('input', updateTextPreview);
-    document.getElementById('text-position').addEventListener('input', (e) => {
-      document.getElementById('position-value').textContent = `${e.target.value}%`;
-      updateTextPreview();
-    });
+app.post('/state', (req, res) => {
+  const { text, background, media, logo } = req.body;
+  if (text !== undefined) state.text = text;
+  if (background !== undefined) state.background = background;
+  if (media !== undefined) state.media = media;
+  if (logo !== undefined) state.logo = logo;
+  saveState();
+  res.json(state);
+});
 
-    updateTextPreview();
-  </script>
-  <!-- Remove Cloudflare scripts for simplicity in this context -->
-</body>
-</html>
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
