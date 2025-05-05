@@ -35,6 +35,10 @@
       top: 0;
       left: 0;
     }
+    #display-logo {
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+    }
     @keyframes backgroundAnimation {
       0% { background: var(--color1); }
       33% { background: var(--color2); }
@@ -104,7 +108,7 @@
           logoElement.src = state.logo.url;
           logoElement.style.width = `${state.logo.scale}%`;
           logoElement.style.top = `${state.logo.position}%`;
-          logoElement.style.transform = 'translateY(-50%)';
+          logoElement.style.transform = 'translateX(-50%) translateY(-50%)';
           if (document.getElementById('display-logo')) document.getElementById('display-logo').remove();
           displayContent.appendChild(logoElement);
         } else if (document.getElementById('display-logo')) {
