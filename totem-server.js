@@ -27,7 +27,7 @@ const upload = multer({
 
 // Crear carpeta temporal
 const uploadsDir = path.join(__dirname, 'temp');
-fs.mkdir(uploadsDir, { recursive: true });
+fs.mkdir(uploadsDir, { recursive: true }).catch(err => console.error('Error creating temp directory:', err));
 
 // Configurar Cloudinary desde variable de entorno
 cloudinary.config({
@@ -48,14 +48,20 @@ const stateFile = path.join(__dirname, 'state.json');
 async function loadState() {
   try {
     const data = await fs.readFile(stateFile, 'utf8');
-    state = JSON.parse(data);
+    const parsedState = JSON.parse(data);
+    state = { ...state, ...parsedState }; // Merge con estado inicial para evitar valores nulos
   } catch (error) {
-    // No se pudo cargar estado anterior
+    console.error('Error loading state:', error.message);
+    // Si falla, mantener el estado inicial
   }
 }
 
 async function saveState() {
-  await fs.writeFile(stateFile, JSON.stringify(state));
+  try {
+    await fs.writeFile(stateFile, JSON.stringify(state));
+  } catch (error) {
+    console.error('Error saving state:', error.message);
+  }
 }
 
 loadState();
