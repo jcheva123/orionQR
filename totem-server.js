@@ -27,7 +27,7 @@ const upload = multer({
 
 // Crear carpeta temporal
 const uploadsDir = path.join(__dirname, 'temp');
-fs.mkdir(uploadsDir, { recursive: true }).catch(err => console.error('Error creating temp directory:', err));
+fs.mkdir(uploadsDir, { recursive: true });
 
 // Configurar Cloudinary desde variable de entorno
 cloudinary.config({
@@ -40,28 +40,21 @@ cloudinary.config({
 let state = {
   text: null,
   background: { type: 'color', value: '#F8E1E9' },
-  media: null,
-  logo: null
+  media: null
 };
 const stateFile = path.join(__dirname, 'state.json');
 
 async function loadState() {
   try {
     const data = await fs.readFile(stateFile, 'utf8');
-    const parsedState = JSON.parse(data);
-    state = { ...state, ...parsedState }; // Merge con estado inicial para evitar valores nulos
+    state = JSON.parse(data);
   } catch (error) {
-    console.error('Error loading state:', error.message);
-    // Si falla, mantener el estado inicial
+    // No se pudo cargar estado anterior
   }
 }
 
 async function saveState() {
-  try {
-    await fs.writeFile(stateFile, JSON.stringify(state));
-  } catch (error) {
-    console.error('Error saving state:', error.message);
-  }
+  await fs.writeFile(stateFile, JSON.stringify(state));
 }
 
 loadState();
@@ -77,7 +70,6 @@ app.post('/upload', upload.single('media'), async (req, res) => {
 
     state.media = result.secure_url;
     state.text = null;
-    state.logo = null;
     await saveState();
     await fs.unlink(req.file.path);
     res.json({ path: result.secure_url });
@@ -93,11 +85,10 @@ app.get('/state', (req, res) => {
 });
 
 app.post('/state', (req, res) => {
-  const { text, background, media, logo } = req.body;
+  const { text, background, media } = req.body;
   if (text !== undefined) state.text = text;
   if (background !== undefined) state.background = background;
   if (media !== undefined) state.media = media;
-  if (logo !== undefined) state.logo = logo;
   saveState();
   res.json(state);
 });
