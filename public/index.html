@@ -1,120 +1,79 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OrionQR - Control Totem</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <title>Control Tótem LED</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600&display=swap" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-      font-family: 'Playfair Display', serif;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2b2b40);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: #ffffff;
     }
     .glass {
-      backdrop-filter: blur(14px);
-      background: rgba(255, 255, 255, 0.5);
-      border-radius: 1rem;
-      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 2rem;
+      width: 90%;
+      max-width: 400px;
     }
-    input, select, textarea {
-      background-color: rgba(255,255,255,0.7) !important;
+    h1 {
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
     }
-    .fancy-button {
-      transition: all 0.3s ease;
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
-    .fancy-button:hover {
-      transform: scale(1.02);
-      background-color: #b88a14 !important;
+    select, input[type="submit"] {
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    select {
+      background: #ffffff;
+      color: #000000;
+    }
+    input[type="submit"] {
+      background-color: #ffcc00;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    input[type="submit"]:hover {
+      background-color: #e6b800;
     }
   </style>
 </head>
-<body class="text-gray-800 min-h-screen flex flex-col items-center justify-center p-6">
-
-  <div class="text-center mb-6">
-    <h1 class="text-4xl font-bold text-[#D4A017] drop-shadow-sm">🎛️ OrionQR</h1>
-    <p class="text-md text-gray-600">Control del Totem LED</p>
+<body>
+  <div class="glass">
+    <h1>Control Tótem LED</h1>
+    <form action="display.html" method="get">
+      <label for="texto">Frase a mostrar:</label>
+      <select name="texto" id="texto" required>
+        <option value="" disabled selected>Seleccioná una frase</option>
+        <option value="¡Bienvenidos!">¡Bienvenidos!</option>
+        <option value="¡Felicidades!">¡Felicidades!</option>
+        <option value="Gracias por venir">Gracias por venir</option>
+        <option value="Comienza el show">Comienza el show</option>
+        <option value="¡A disfrutar!">¡A disfrutar!</option>
+      </select>
+      <input type="submit" value="Aplicar texto">
+    </form>
   </div>
-
-  <div class="w-full max-w-md glass p-6">
-
-    <input id="admin-password" type="password" placeholder="Contraseña" class="w-full p-3 mb-4 border rounded focus:outline-none focus:ring-2 focus:ring-[#D4A017]">
-
-    <div id="admin-panel" class="space-y-6">
-
-      <!-- Media Upload -->
-      <section>
-        <h2 class="text-xl font-semibold mb-2">📷 Cargar Foto/Video</h2>
-        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="w-full p-2 border rounded">
-        <button id="upload-btn" class="fancy-button mt-2 w-full bg-[#D4A017] text-white p-3 rounded">Subir y Mostrar</button>
-      </section>
-
-      <!-- Color de Fondo -->
-      <section>
-        <h2 class="text-xl font-semibold mb-2">🎨 Color de Fondo</h2>
-        <div class="grid grid-cols-3 gap-2 mb-2">
-          <button class="bg-black text-white p-2 rounded" onclick="setColor('black')">Negro</button>
-          <button class="bg-red-500 text-white p-2 rounded" onclick="setColor('red')">Rojo</button>
-          <button class="bg-blue-500 text-white p-2 rounded" onclick="setColor('blue')">Azul</button>
-          <button class="bg-green-500 text-white p-2 rounded" onclick="setColor('green')">Verde</button>
-          <button class="bg-yellow-500 text-white p-2 rounded" onclick="setColor('yellow')">Amarillo</button>
-          <button class="bg-[#F8E1E9] text-gray-800 p-2 border rounded" onclick="setColor('#F8E1E9')">Rosa</button>
-        </div>
-        <input id="custom-color" type="color" class="w-full h-10 mb-2">
-        <button id="custom-color-btn" class="fancy-button w-full bg-[#D4A017] text-white p-3 rounded">Aplicar Color Personalizado</button>
-      </section>
-
-      <!-- Fondo Animado -->
-      <section>
-        <h2 class="text-xl font-semibold mb-2">🌈 Fondo Animado</h2>
-        <div class="grid grid-cols-1 gap-2 mb-2">
-          <label>Color 1: <input id="bg-color1" type="color" value="#F8E1E9" class="w-full h-10"></label>
-          <label>Color 2: <input id="bg-color2" type="color" value="#D4A017" class="w-full h-10"></label>
-          <label>Color 3: <input id="bg-color3" type="color" value="#FFFFFF" class="w-full h-10"></label>
-        </div>
-        <button id="animated-bg-btn" class="fancy-button w-full bg-[#D4A017] text-white p-3 rounded">Aplicar Fondo Animado</button>
-      </section>
-
-      <!-- Texto Personalizado -->
-      <section>
-        <h2 class="text-xl font-semibold mb-2">📝 Texto Personalizado</h2>
-        <textarea id="custom-text" rows="3" placeholder="Ej: Boda de Alejo\n& Valentina" class="w-full p-2 mb-2 border rounded resize-none"></textarea>
-        <label class="block mb-1">Tipografía:</label>
-        <select id="text-font" class="w-full p-2 border rounded mb-2">
-          <option value="Playfair Display">Playfair Display</option>
-          <option value="Roboto">Roboto</option>
-          <option value="Montserrat">Montserrat</option>
-          <option value="Lobster">Lobster</option>
-        </select>
-        <label class="block mb-1">Tamaño del Texto:</label>
-        <select id="text-size" class="w-full p-2 border rounded mb-2">
-          <option value="20">Pequeño (20px)</option>
-          <option value="30">Mediano (30px)</option>
-          <option value="40">Grande (40px)</option>
-          <option value="50">Muy Grande (50px)</option>
-        </select>
-        <label class="block mb-1">Color del Texto:</label>
-        <input id="text-color" type="color" class="w-full h-10 mb-2">
-        <label class="block mb-1">Posición Vertical:</label>
-        <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
-        <span id="position-value" class="block text-right text-sm text-gray-500">50%</span>
-      </section>
-    </div>
-  </div>
-
-  <script>
-    // Mostrar panel al ingresar contraseña correcta
-    document.getElementById("admin-password").addEventListener("change", function() {
-      if (this.value === "admin") {
-        document.getElementById("admin-panel").style.display = "block";
-      }
-    });
-
-    // Slider de posición
-    document.getElementById("text-position").addEventListener("input", function() {
-      document.getElementById("position-value").textContent = this.value + "%";
-    });
-  </script>
 </body>
 </html>
