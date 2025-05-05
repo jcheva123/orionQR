@@ -202,8 +202,8 @@
     let currentBackground = { type: 'color', value: '#F8E1E9' };
     let currentLogo = null;
 
-    const logoBlackUrl = 'https://asset.cloudinary.com/ddhie4lad/d997d52d75d349b706609f185a122274?w=256&h=704&c=fit';
-    const logoWhiteUrl = 'https://asset.cloudinary.com/ddhie4lad/c673271c66f78905954bc6b500198933?w=256&h=704&c=fit';
+    const logoBlackUrl = 'https://res.cloudinary.com/ddhie4lad/image/upload/v1746448953/LOGO_ORION_NEGRO_asgrem.png?w=256&h=704&c=fit';
+    const logoWhiteUrl = 'https://res.cloudinary.com/ddhie4lad/image/upload/v1746448953/LOGO_ORION_BLANCO_yar1ed.png?w=256&h=704&c=fit';
 
     async function setState({ text, background, media, logo }) {
       try {
@@ -260,7 +260,11 @@
 
     function setLogo(logoUrl) {
       currentLogo = logoUrl;
-      document.getElementById('logo-image').src = logoUrl;
+      const logoImage = document.getElementById('logo-image');
+      logoImage.src = logoUrl;
+      logoImage.onerror = () => {
+        alert('Error al cargar el logo. Verifica la URL o la disponibilidad del archivo.');
+      };
       document.getElementById('preview-logo').style.display = 'block';
       document.getElementById('hide-logo-btn').style.display = 'block';
       setState({ text: null, background: currentBackground, media: null, logo: currentLogo });
