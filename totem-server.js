@@ -43,14 +43,14 @@ let state = {
   media: null,
   logo: null
 };
-const stateFile = path.join(__dirname, 'state.json');
+const stateFile = path.join(__dirname, 'temp/state.json');
 
 async function loadState() {
   try {
     const data = await fs.readFile(stateFile, 'utf8');
     state = JSON.parse(data);
   } catch (error) {
-    // No se pudo cargar estado anterior
+    // No se pudo cargar estado anterior, usar valor por defecto
   }
 }
 
@@ -82,28 +82,6 @@ app.post('/upload', upload.single('media'), async (req, res) => {
   } catch (error) {
     console.error('Error subiendo a Cloudinary:', error);
     res.status(500).json({ error: 'Error al subir a Cloudinary: ' + error.message });
-  }
-});
-
-// Subida de logos
-app.post('/upload-logo', upload.single('logo'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No se subió ningún logo' });
-  try {
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'orionQR/logos',
-      resource_type: 'image',
-      transformation: [
-        { width: 256, height: 704, crop: 'fit' }
-      ]
-    });
-
-    state.logo = result.secure_url;
-    await saveState();
-    await fs.unlink(req.file.path);
-    res.json({ path: result.secure_url });
-  } catch (error) {
-    console.error('Error subiendo logo a Cloudinary:', error);
-    res.status(500).json({ error: 'Error al subir logo a Cloudinary: ' + error.message });
   }
 });
 
