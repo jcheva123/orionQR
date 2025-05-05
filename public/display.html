@@ -39,6 +39,17 @@
       left: 50%;
       transform: translateX(-50%) translateY(-50%);
     }
+    #error-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: red;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      display: none;
+    }
     @keyframes backgroundAnimation {
       0% { background: var(--color1); }
       33% { background: var(--color2); }
@@ -49,15 +60,20 @@
 </head>
 <body>
   <div id="display-content"></div>
+  <div id="error-message">Error al conectar con el servidor. Intentando reconectar...</div>
 
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
     const displayContent = document.getElementById('display-content');
+    const errorMessage = document.getElementById('error-message');
 
     async function updateDisplay() {
       try {
         const response = await fetch(`${backendUrl}/state`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const state = await response.json();
+
+        errorMessage.style.display = 'none';
 
         // Aplicar fondo
         if (state.background.type === 'color') {
@@ -115,11 +131,13 @@
           document.getElementById('display-logo').remove();
         }
       } catch (error) {
-        console.error('Error fetching state:', error);
+        console.error('Error fetching state:', error.message);
+        errorMessage.textContent = `Error al conectar con el servidor: ${error.message}. Intentando reconectar...`;
+        errorMessage.style.display = 'block';
       }
     }
 
-    // Actualizar cada 1 segundo
+    // Actualizar cada 1 segundo con reconexión
     setInterval(updateDisplay, 1000);
     updateDisplay(); // Inicialización
   </script>
