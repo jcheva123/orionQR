@@ -3,52 +3,118 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Control Tótem LED</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Roboto&display=swap" rel="stylesheet" />
+  <title>Control Display</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      font-family: 'Roboto', sans-serif;
-    }
-    h1, h2 {
       font-family: 'Playfair Display', serif;
-    }
-    .glass {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(12px);
-    }
-    select option {
-      color: black;
     }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-zinc-900 via-neutral-800 to-zinc-900 text-white flex items-center justify-center p-4">
+<body class="bg-gradient-to-br from-[#fdf6f9] to-[#fce8ef] min-h-screen flex flex-col items-center justify-center p-6 text-gray-800">
 
-  <div class="w-full max-w-md space-y-6 bg-white/10 rounded-2xl p-6 shadow-xl glass">
-    <h1 class="text-3xl font-bold text-center text-yellow-400">Control del Tótem LED</h1>
+  <h1 class="text-4xl md:text-5xl text-[#D4A017] mb-10 font-bold tracking-wide shadow-sm text-center">
+    OrionQR - Control Totem LED
+  </h1>
 
-    <form action="display.html" method="get" class="space-y-4">
-      <label class="block">
-        <span class="block mb-1 text-lg text-white">Texto personalizado:</span>
-        <input type="text" name="texto" class="w-full px-4 py-2 rounded-lg bg-white text-black focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Escribí un mensaje..." />
-      </label>
+  <div id="admin-panel" class="w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl border border-[#f0dcdc] space-y-6">
 
-      <div>
-        <span class="block mb-1 text-lg text-white">Frases predefinidas:</span>
-        <div class="grid grid-cols-2 gap-2">
-          <button type="submit" name="texto" value="¡Bienvenidos!" class="bg-yellow-400 text-black rounded-lg py-2 font-semibold hover:bg-yellow-300 transition">¡Bienvenidos!</button>
-          <button type="submit" name="texto" value="Felicidades" class="bg-yellow-400 text-black rounded-lg py-2 font-semibold hover:bg-yellow-300 transition">Felicidades</button>
-          <button type="submit" name="texto" value="Gracias por venir" class="bg-yellow-400 text-black rounded-lg py-2 font-semibold hover:bg-yellow-300 transition">Gracias por venir</button>
-          <button type="submit" name="texto" value="Comienza el show" class="bg-yellow-400 text-black rounded-lg py-2 font-semibold hover:bg-yellow-300 transition">Comienza el show</button>
-          <button type="submit" name="texto" value="A disfrutar" class="bg-yellow-400 text-black rounded-lg py-2 font-semibold hover:bg-yellow-300 transition">A disfrutar</button>
-        </div>
-      </div>
+    <!-- Subir imagen -->
+    <div>
+      <label for="imagen" class="block font-semibold mb-2">Subir imagen</label>
+      <input type="file" id="imagen" accept="image/*" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4A017]">
+      <button onclick="mostrarImagen()" class="mt-3 w-full bg-[#D4A017] text-white font-semibold p-2 rounded-md hover:bg-[#b88a14] transition duration-200">
+        Subir y Mostrar
+      </button>
+    </div>
 
-      <div class="pt-2">
-        <button type="submit" class="w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-zinc-200 transition">Aplicar texto personalizado</button>
-      </div>
-    </form>
+    <!-- Mostrar texto personalizado -->
+    <div>
+      <label for="mensaje" class="block font-semibold mb-2">Mensaje para mostrar</label>
+      <textarea id="mensaje" rows="3" placeholder="Escribí un mensaje..." class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4A017]"></textarea>
+      <button onclick="mostrarMensaje()" class="mt-3 w-full bg-[#D4A017] text-white font-semibold p-2 rounded-md hover:bg-[#b88a14] transition duration-200">
+        Mostrar Mensaje
+      </button>
+    </div>
+
+    <!-- Cambiar color de fondo -->
+    <div>
+      <label for="color" class="block font-semibold mb-2">Color de fondo</label>
+      <input type="color" id="color" class="w-full h-12 border rounded-md cursor-pointer">
+      <button onclick="cambiarColor()" class="mt-3 w-full bg-[#D4A017] text-white font-semibold p-2 rounded-md hover:bg-[#b88a14] transition duration-200">
+        Cambiar Color
+      </button>
+    </div>
+
+    <!-- Ajustar brillo -->
+    <div>
+      <label for="brillo" class="block font-semibold mb-2">Brillo</label>
+      <input type="range" id="brillo" min="0" max="100" value="100" class="w-full accent-[#D4A017]">
+      <button onclick="ajustarBrillo()" class="mt-3 w-full bg-[#D4A017] text-white font-semibold p-2 rounded-md hover:bg-[#b88a14] transition duration-200">
+        Aplicar Brillo
+      </button>
+    </div>
+
+    <!-- Apagar pantalla -->
+    <div>
+      <button onclick="apagarPantalla()" class="w-full bg-red-500 text-white font-semibold p-2 rounded-md hover:bg-red-600 transition duration-200">
+        Apagar Pantalla
+      </button>
+    </div>
+
   </div>
 
+  <script>
+    function mostrarImagen() {
+      const fileInput = document.getElementById('imagen');
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          fetch('display.html', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ imagen: reader.result })
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function mostrarMensaje() {
+      const mensaje = document.getElementById('mensaje').value;
+      fetch('display.html', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ mensaje })
+      });
+    }
+
+    function cambiarColor() {
+      const color = document.getElementById('color').value;
+      fetch('display.html', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ color })
+      });
+    }
+
+    function ajustarBrillo() {
+      const brillo = document.getElementById('brillo').value;
+      fetch('display.html', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ brillo })
+      });
+    }
+
+    function apagarPantalla() {
+      fetch('display.html', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ apagar: true })
+      });
+    }
+  </script>
 </body>
 </html>
