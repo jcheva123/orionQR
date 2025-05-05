@@ -30,6 +30,9 @@
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
     }
     @keyframes subtleAnimation {
       0% { opacity: 0; transform: translateY(20px); }
@@ -223,7 +226,7 @@
       logoImage.src = logoUrl;
       logoImage.style.width = `${currentLogo.scale}%`;
       logoImage.style.top = `${currentLogo.position}%`;
-      logoImage.style.transform = 'translateY(-50%)';
+      logoImage.style.transform = 'translateX(-50%) translateY(-50%)';
       document.getElementById('preview-logo').style.display = 'block';
       document.getElementById('hide-logo-btn').style.display = 'block';
       setState({ text: null, background: currentBackground, media: null, logo: currentLogo });
@@ -248,7 +251,7 @@
         const logoImage = document.getElementById('logo-image');
         logoImage.style.width = `${currentLogo.scale}%`;
         logoImage.style.top = `${currentLogo.position}%`;
-        logoImage.style.transform = 'translateY(-50%)';
+        logoImage.style.transform = 'translateX(-50%) translateY(-50%)';
       }
     }
 
