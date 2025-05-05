@@ -1,120 +1,247 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Control Display</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrionQR - Control Totem</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Playfair Display', serif;
+    body { background-color: #F8E1E9; }
+    #admin-panel { display: none; }
+    .text-preview {
+      width: 256px;
+      height: 704px;
+      background-color: #F8E1E9;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .preview-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      white-space: pre-wrap;
+      animation: subtleAnimation 30s infinite;
+    }
+    @keyframes subtleAnimation {
+      0% { opacity: 0; transform: translateY(20px); }
+      5% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      95% { opacity: 0.8; transform: translateY(-10px); }
+      100% { opacity: 0; transform: translateY(20px); }
+    }
+    @keyframes backgroundAnimation {
+      0% { background-color: var(--color1); }
+      33% { background-color: var(--color2); }
+      66% { background-color: var(--color3, var(--color1)); }
+      100% { background-color: var(--color1); }
     }
   </style>
 </head>
-<body class="bg-gradient-to-br from-[#fdf6f9] to-[#fce8ef] min-h-screen flex flex-col items-center justify-center p-6 text-gray-800">
-
-  <h1 class="text-4xl md:text-5xl text-[#D4A017] mb-10 font-bold tracking-wide shadow-sm text-center">
-    OrionQR - Control Totem LED
-  </h1>
-
-  <div id="admin-panel" class="w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl border border-[#f0dcdc] space-y-6">
-
-    <!-- Subir imagen -->
-    <div>
-      <label for="imagen" class="block font-semibold mb-2">Subir imagen</label>
-      <input type="file" id="imagen" accept="image/*" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4A017]">
-      <button onclick="mostrarImagen()" class="mt-3 w-full bg-[#D4A017] text-white font-semibold p-2 rounded-md hover:bg-[#b88a14] transition duration-200">
-        Subir y Mostrar
-      </button>
+<body class="font-['Playfair_Display'] text-gray-800">
+  <div class="min-h-screen flex flex-col items-center justify-center p-4">
+    <h1 class="text-3xl text-[#D4A017] mb-6">OrionQR - Control Totem LED</h1>
+    <input id="admin-password" type="password" placeholder="Contraseña" class="w-full max-w-md p-2 mb-4 border rounded">
+    
+    <div id="admin-panel" class="w-full max-w-md bg-white p-6 rounded shadow">
+      <h2 class="text-2xl mb-4">Opciones</h2>
+      
+      <div class="mb-6">
+        <h3 class="text-xl mb-2">Cargar Foto/Video</h3>
+        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="w-full p-2 border rounded">
+        <button id="upload-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Subir y Mostrar</button>
+      </div>
+      
+      <div class="mb-6">
+        <h3 class="text-xl mb-2">Color de Fondo</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <button class="bg-black text-white p-2 rounded" onclick="setColor('black')">Negro (Apagar)</button>
+          <button class="bg-red-500 text-white p-2 rounded" onclick="setColor('red')">Rojo</button>
+          <button class="bg-blue-500 text-white p-2 rounded" onclick="setColor('blue')">Azul</button>
+          <button class="bg-green-500 text-white p-2 rounded" onclick="setColor('green')">Verde</button>
+          <button class="bg-yellow-500 text-white p-2 rounded" onclick="setColor('yellow')">Amarillo</button>
+          <button class="bg-[#F8E1E9] text-gray-800 p-2 rounded border" onclick="setColor('#F8E1E9')">Rosa</button>
+        </div>
+        <input id="custom-color" type="color" class="mt-2 w-full h-10">
+        <button id="custom-color-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Color Personalizado</button>
+        <div class="mt-4">
+          <h4 class="text-lg mb-2">Fondo Animado</h4>
+          <div class="mb-2">
+            <label class="block mb-1">Color 1:</label>
+            <input id="bg-color1" type="color" value="#F8E1E9" class="w-full h-10">
+          </div>
+          <div class="mb-2">
+            <label class="block mb-1">Color 2:</label>
+            <input id="bg-color2" type="color" value="#D4A017" class="w-full h-10">
+          </div>
+          <div class="mb-2">
+            <label class="block mb-1">Color 3 (opcional):</label>
+            <input id="bg-color3" type="color" value="#FFFFFF" class="w-full h-10">
+          </div>
+          <button id="animated-bg-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Fondo Animado</button>
+        </div>
+      </div>
+      
+      <div class="mb-6">
+        <h3 class="text-xl mb-2">Texto Personalizado</h3>
+        <textarea id="custom-text" rows="3" placeholder="Ej: Boda de Alejo\n& Valentina" class="w-full p-2 mb-2 border rounded resize-none"></textarea>
+        <div class="mb-2">
+          <label class="block mb-1">Tipografía:</label>
+          <select id="text-font" class="w-full p-2 border rounded">
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Lobster">Lobster</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="block mb-1">Tamaño del Texto:</label>
+          <select id="text-size" class="w-full p-2 border rounded">
+            <option value="20">Pequeño (20px)</option>
+            <option value="30">Mediano (30px)</option>
+            <option value="40">Grande (40px)</option>
+            <option value="50">Muy Grande (50px)</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="block mb-1">Color del Texto:</label>
+          <input id="text-color" type="color" class="w-full h-10">
+        </div>
+        <div class="mb-2">
+          <label class="block mb-1">Posición Vertical:</label>
+          <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
+          <span id="position-value" class="text-sm text-gray-600">50%</span>
+        </div>
+        <div class="text-preview" id="text-preview">
+          <div class="preview-text" id="preview-text">Texto de ejemplo</div>
+        </div>
+        <button id="text-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Texto</button>
+      </div>
     </div>
-
-    <!-- Mostrar texto personalizado -->
-    <div>
-      <label for="mensaje" class="block font-semibold mb-2">Mensaje para mostrar</label>
-      <textarea id="mensaje" rows="3" placeholder="Escribí un mensaje..." class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4A017]"></textarea>
-      <button onclick="mostrarMensaje()" class="mt-3 w-full bg-[#D4A017] text-white font-semibold p-2 rounded-md hover:bg-[#b88a14] transition duration-200">
-        Mostrar Mensaje
-      </button>
-    </div>
-
-    <!-- Cambiar color de fondo -->
-    <div>
-      <label for="color" class="block font-semibold mb-2">Color de fondo</label>
-      <input type="color" id="color" class="w-full h-12 border rounded-md cursor-pointer">
-      <button onclick="cambiarColor()" class="mt-3 w-full bg-[#D4A017] text-white font-semibold p-2 rounded-md hover:bg-[#b88a14] transition duration-200">
-        Cambiar Color
-      </button>
-    </div>
-
-    <!-- Ajustar brillo -->
-    <div>
-      <label for="brillo" class="block font-semibold mb-2">Brillo</label>
-      <input type="range" id="brillo" min="0" max="100" value="100" class="w-full accent-[#D4A017]">
-      <button onclick="ajustarBrillo()" class="mt-3 w-full bg-[#D4A017] text-white font-semibold p-2 rounded-md hover:bg-[#b88a14] transition duration-200">
-        Aplicar Brillo
-      </button>
-    </div>
-
-    <!-- Apagar pantalla -->
-    <div>
-      <button onclick="apagarPantalla()" class="w-full bg-red-500 text-white font-semibold p-2 rounded-md hover:bg-red-600 transition duration-200">
-        Apagar Pantalla
-      </button>
-    </div>
-
   </div>
 
   <script>
-    function mostrarImagen() {
-      const fileInput = document.getElementById('imagen');
-      const file = fileInput.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          fetch('display.html', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ imagen: reader.result })
-          });
-        };
-        reader.readAsDataURL(file);
+    const backendUrl = 'https://orionqr.onrender.com';
+
+    // Track the current background state
+    let currentBackground = { type: 'color', value: '#F8E1E9' };
+
+    async function setState({ text, background, media }) {
+      try {
+        const response = await fetch(`${backendUrl}/state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, background, media })
+        });
+        if (!response.ok) throw new Error('Error al actualizar contenido');
+      } catch (error) {
+        alert('Error: ' + error.message);
       }
     }
 
-    function mostrarMensaje() {
-      const mensaje = document.getElementById('mensaje').value;
-      fetch('display.html', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ mensaje })
-      });
+    async function uploadMedia() {
+      const fileInput = document.getElementById('media-upload');
+      if (!fileInput.files[0]) {
+        alert('Selecciona un archivo');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('media', fileInput.files[0]);
+      try {
+        const response = await fetch(`${backendUrl}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        if (!response.ok) throw new Error('Error al subir archivo');
+        const { path } = await response.json();
+        const fullMediaUrl = path;
+
+        await setState({ media: fullMediaUrl, text: null, background: currentBackground });
+        fileInput.value = '';
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
     }
 
-    function cambiarColor() {
-      const color = document.getElementById('color').value;
-      fetch('display.html', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ color })
-      });
+    function setColor(color) {
+      currentBackground = { type: 'color', value: color };
+      setState({ background: currentBackground });
+      const preview = document.getElementById('text-preview');
+      preview.style.backgroundColor = color;
+      preview.style.animation = 'none';
     }
 
-    function ajustarBrillo() {
-      const brillo = document.getElementById('brillo').value;
-      fetch('display.html', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ brillo })
-      });
+    function setAnimatedBackground(colors) {
+      currentBackground = { type: 'animatedBackground', value: colors };
+      setState({ background: currentBackground });
+      const preview = document.getElementById('text-preview');
+      preview.style.setProperty('--color1', colors[0]);
+      preview.style.setProperty('--color2', colors[1]);
+      preview.style.setProperty('--color3', colors[2] || colors[0]);
+      preview.style.animation = 'backgroundAnimation 15s infinite';
     }
 
-    function apagarPantalla() {
-      fetch('display.html', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ apagar: true })
-      });
+    function updateTextPreview() {
+      const text = document.getElementById('custom-text').value || 'Texto de ejemplo';
+      const font = document.getElementById('text-font').value;
+      const size = document.getElementById('text-size').value + 'px';
+      const color = document.getElementById('text-color').value;
+      const position = document.getElementById('text-position').value;
+      const previewText = document.getElementById('preview-text');
+
+      previewText.textContent = text;
+      previewText.style.fontFamily = `'${font}', serif`;
+      previewText.style.fontSize = size;
+      previewText.style.color = color;
+      previewText.style.top = `${position}%`;
+      previewText.style.transform = 'translateY(-50%)';
     }
+
+    document.getElementById('admin-password').addEventListener('input', (e) => {
+      if (e.target.value === 'admin123') {
+        document.getElementById('admin-panel').style.display = 'block';
+      }
+    });
+
+    document.getElementById('upload-btn').addEventListener('click', uploadMedia);
+    document.getElementById('custom-color-btn').addEventListener('click', () => {
+      const color = document.getElementById('custom-color').value;
+      setColor(color);
+    });
+
+    document.getElementById('animated-bg-btn').addEventListener('click', () => {
+      const color1 = document.getElementById('bg-color1').value;
+      const color2 = document.getElementById('bg-color2').value;
+      const color3 = document.getElementById('bg-color3').value;
+      setAnimatedBackground([color1, color2, color3]);
+    });
+
+    document.getElementById('text-btn').addEventListener('click', () => {
+      const text = document.getElementById('custom-text').value;
+      const font = document.getElementById('text-font').value;
+      const size = document.getElementById('text-size').value;
+      const color = document.getElementById('text-color').value;
+      const position = document.getElementById('text-position').value;
+      if (!text) {
+        alert('Por favor, ingresa un texto');
+        return;
+      }
+      const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
+      setState({ text: textConfig, background: currentBackground, media: null });
+    });
+
+    document.getElementById('custom-text').addEventListener('input', updateTextPreview);
+    document.getElementById('text-font').addEventListener('change', updateTextPreview);
+    document.getElementById('text-size').addEventListener('change', updateTextPreview);
+    document.getElementById('text-color').addEventListener('input', updateTextPreview);
+    document.getElementById('text-position').addEventListener('input', (e) => {
+      document.getElementById('position-value').textContent = `${e.target.value}%`;
+      updateTextPreview();
+    });
+
+    updateTextPreview();
   </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93893b37c8b5c000',t:'MTc0NjAzOTA5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
