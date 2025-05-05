@@ -3,356 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OrionQR - Control Totem</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <title>OrionQR - Display</title>
   <style>
     body {
-      background: linear-gradient(135deg, #0d0d0d, #1a1a2e);
-      color: #e0e0e0;
-      overflow-x: hidden;
-    }
-    #admin-panel { display: none; }
-    .text-preview {
-      width: 100%;
-      max-width: 256px;
+      margin: 0;
+      padding: 0;
+      width: 256px;
       height: 704px;
-      background: rgba(0, 0, 0, 0.8);
-      border: 2px solid #00d4ff;
-      border-radius: 10px;
-      position: relative;
       overflow: hidden;
-      margin: 1rem auto;
+      background: #F8E1E9;
     }
-    .preview-text, .preview-logo {
-      position: absolute;
+    #display-content {
       width: 100%;
+      height: 100%;
+      position: relative;
       text-align: center;
     }
-    .preview-text {
+    #display-text {
+      position: absolute;
+      width: 100%;
       white-space: pre-wrap;
+      font-family: 'Playfair Display', serif;
+      font-size: 30px;
       color: #00ffcc;
       text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
-      animation: subtleAnimation 30s infinite;
     }
-    .preview-logo img {
-      max-width: 256px;
-      max-height: 704px;
+    #display-media, #display-logo {
+      width: 100%;
+      height: 100%;
       object-fit: contain;
-    }
-    @keyframes subtleAnimation {
-      0% { opacity: 0; transform: translateY(20px); }
-      5% { opacity: 1; transform: translateY(0); }
-      90% { opacity: 1; transform: translateY(0); }
-      95% { opacity: 0.8; transform: translateY(-10px); }
-      100% { opacity: 0; transform: translateY(20px); }
+      position: absolute;
+      top: 0;
+      left: 0;
     }
     @keyframes backgroundAnimation {
       0% { background: linear-gradient(45deg, var(--color1), var(--color2)); }
       50% { background: linear-gradient(45deg, var(--color2), var(--color3, var(--color1))); }
       100% { background: linear-gradient(45deg, var(--color1), var(--color2)); }
     }
-    @keyframes neonGlow {
-      0% { box-shadow: 0 0 5px #00d4ff, 0 0 10px #00d4ff; }
-      50% { box-shadow: 0 0 10px #00ffcc, 0 0 20px #ff00ff; }
-      100% { box-shadow: 0 0 5px #00d4ff, 0 0 10px #00d4ff; }
-    }
-    .tech-button {
-      background: linear-gradient(90deg, #00d4ff, #ff00ff);
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 50px;
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 700;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 0 5px #00d4ff;
-    }
-    .tech-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px #00ffcc, 0 0 30px #ff00ff;
-      animation: neonGlow 1.5s infinite;
-    }
-    .input-field {
-      background: #1a1a2e;
-      border: 1px solid #00d4ff;
-      color: #e0e0e0;
-      border-radius: 8px;
-      padding: 0.5rem;
-    }
-    .input-field:focus {
-      outline: none;
-      border-color: #00ffcc;
-      box-shadow: 0 0 10px #00ffcc;
-    }
-    input[type="color"]::-webkit-color-swatch {
-      border-radius: 8px;
-      border: none;
-      padding: 0;
-    }
-    input[type="color"]::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-    input[type="color"] {
-      width: 100%;
-      height: 40px;
-      background: linear-gradient(to right, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff);
-      border: 1px solid #00d4ff;
-      border-radius: 8px;
-    }
   </style>
 </head>
-<body class="font-['Playfair_Display'] text-gray-200">
-  <div class="min-h-screen flex flex-col items-center justify-center p-4">
-    <h1 class="text-4xl md:text-5xl text-[#00d4ff] mb-6 font-['Orbitron'] shadow-lg">OrionQR - Control Totem</h1>
-    <input id="admin-password" type="password" placeholder="Contraseña" class="input-field w-full max-w-md mb-4">
-
-    <div id="admin-panel" class="w-full max-w-md bg-[#0d0d0d] p-6 rounded-lg shadow-lg border border-[#00d4ff]">
-      <h2 class="text-2xl md:text-3xl mb-4 text-[#ff00ff] font-['Orbitron']">Opciones</h2>
-
-      <div class="mb-6">
-        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Cargar Foto/Video</h3>
-        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="input-field w-full p-2 mb-2">
-        <button id="upload-btn" class="tech-button w-full">Subir y Mostrar</button>
-      </div>
-
-      <div class="mb-6">
-        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Color de Fondo</h3>
-        <div class="grid grid-cols-3 gap-2 mb-4">
-          <button class="tech-button bg-black text-white p-2" onclick="setColor('black')">Negro</button>
-          <button class="tech-button bg-white text-black p-2" onclick="setColor('white')">Blanco</button>
-          <button class="tech-button bg-[#F8E1E9] text-gray-800 p-2" onclick="setColor('#F8E1E9')">Rosa</button>
-        </div>
-        <input id="custom-color" type="color" class="input-field mt-2 w-full h-10">
-        <button id="custom-color-btn" class="tech-button mt-2 w-full">Aplicar Color</button>
-      </div>
-
-      <div class="mb-6">
-        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Fondo Animado</h3>
-        <div class="grid grid-cols-3 gap-2 mb-4">
-          <div class="mb-2">
-            <label class="block mb-1 text-[#00ffcc]">Color 1:</label>
-            <input id="bg-color1" type="color" value="#F8E1E9" class="input-field w-full h-8">
-          </div>
-          <div class="mb-2">
-            <label class="block mb-1 text-[#00ffcc]">Color 2:</label>
-            <input id="bg-color2" type="color" value="#D4A017" class="input-field w-full h-8">
-          </div>
-          <div class="mb-2">
-            <label class="block mb-1 text-[#00ffcc]">Color 3:</label>
-            <input id="bg-color3" type="color" value="#FFFFFF" class="input-field w-full h-8">
-          </div>
-        </div>
-        <button id="animated-bg-btn" class="tech-button w-full">Aplicar Fondo</button>
-      </div>
-
-      <div class="mb-6">
-        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Texto Personalizado</h3>
-        <textarea id="custom-text" rows="3" placeholder="ORION eventos" class="input-field w-full p-2 mb-2 resize-none"></textarea>
-        <div class="mb-2">
-          <label class="block mb-1 text-[#00ffcc]">Tipografía:</label>
-          <select id="text-font" class="input-field w-full p-2">
-            <option value="Playfair Display">Playfair Display</option>
-            <option value="Orbitron">Orbitron</option>
-            <option value="Roboto">Roboto</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <label class="block mb-1 text-[#00ffcc]">Tamaño del Texto:</label>
-          <select id="text-size" class="input-field w-full p-2">
-            <option value="20">Pequeño (20px)</option>
-            <option value="30">Mediano (30px)</option>
-            <option value="40">Grande (40px)</option>
-            <option value="50">Muy Grande (50px)</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <label class="block mb-1 text-[#00ffcc]">Color del Texto:</label>
-          <input id="text-color" type="color" class="input-field w-full h-10">
-        </div>
-        <div class="mb-2">
-          <label class="block mb-1 text-[#00ffcc]">Posición Vertical:</label>
-          <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
-          <span id="position-value" class="text-sm text-[#00d4ff]">50%</span>
-        </div>
-        <button id="text-btn" class="tech-button w-full mb-4">Aplicar Texto</button>
-        <div class="text-preview" id="text-preview">
-          <div class="preview-text" id="preview-text">ORION eventos</div>
-          <div class="preview-logo" id="preview-logo" style="display: none;">
-            <img id="logo-image" src="" alt="Logo Orion">
-          </div>
-        </div>
-        <div class="mt-2">
-          <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Logo Orion</h3>
-          <div class="grid grid-cols-2 gap-2 mb-2">
-            <button id="logo-black-btn" class="tech-button bg-gray-800 text-white p-2">Logo Negro</button>
-            <button id="logo-white-btn" class="tech-button bg-gray-200 text-black p-2">Logo Blanco</button>
-          </div>
-          <button id="hide-logo-btn" class="tech-button w-full mb-2" style="display: none;">Ocultar Logo</button>
-          <label class="block mb-1 text-[#00ffcc]">Posición Vertical Logo:</label>
-          <input id="logo-position" type="range" min="0" max="100" value="50" class="w-full">
-          <span id="logo-position-value" class="text-sm text-[#00d4ff]">50%</span>
-        </div>
-      </div>
-    </div>
-  </div>
+<body>
+  <div id="display-content"></div>
 
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
-    let currentBackground = { type: 'color', value: '#F8E1E9' };
-    let currentLogo = null;
+    const displayContent = document.getElementById('display-content');
 
-    const logoBlackUrl = 'https://res.cloudinary.com/ddhie4lad/image/upload/v1746448953/LOGO_ORION_NEGRO_asgrem.png?w=256&h=704&c=fit';
-    const logoWhiteUrl = 'https://res.cloudinary.com/ddhie4lad/image/upload/v1746448953/LOGO_ORION_BLANCO_yar1ed.png?w=256&h=704&c=fit';
-
-    async function setState({ text, background, media, logo }) {
+    async function updateDisplay() {
       try {
-        const response = await fetch(`${backendUrl}/state`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, background, media, logo })
-        });
-        if (!response.ok) throw new Error('Error al actualizar contenido');
+        const response = await fetch(`${backendUrl}/state`);
+        const state = await response.json();
+
+        // Aplicar fondo
+        if (state.background.type === 'color') {
+          displayContent.style.backgroundColor = state.background.value;
+          displayContent.style.animation = 'none';
+        } else if (state.background.type === 'animatedBackground') {
+          const [color1, color2, color3] = state.background.value;
+          displayContent.style.setProperty('--color1', color1);
+          displayContent.style.setProperty('--color2', color2);
+          displayContent.style.setProperty('--color3', color3 || color1);
+          displayContent.style.animation = 'backgroundAnimation 15s infinite';
+        }
+
+        // Mostrar texto
+        if (state.text) {
+          const textElement = document.createElement('div');
+          textElement.id = 'display-text';
+          textElement.style.fontFamily = `'${state.text.font}', serif`;
+          textElement.style.fontSize = `${state.text.size}px`;
+          textElement.style.color = state.text.color;
+          textElement.style.top = `${state.text.position}%`;
+          textElement.style.transform = 'translateY(-50%)';
+          textElement.textContent = state.text.text;
+          if (document.getElementById('display-text')) document.getElementById('display-text').remove();
+          displayContent.appendChild(textElement);
+        }
+
+        // Mostrar media (foto/video)
+        if (state.media) {
+          const mediaElement = document.createElement(state.media.includes('.mp4') ? 'video' : 'img');
+          mediaElement.id = 'display-media';
+          mediaElement.src = state.media;
+          mediaElement.autoplay = true;
+          mediaElement.loop = true;
+          mediaElement.controls = false;
+          if (document.getElementById('display-media')) document.getElementById('display-media').remove();
+          displayContent.appendChild(mediaElement);
+        } else if (document.getElementById('display-media')) {
+          document.getElementById('display-media').remove();
+        }
+
+        // Mostrar logo
+        if (state.logo) {
+          const logoElement = document.createElement('img');
+          logoElement.id = 'display-logo';
+          logoElement.src = state.logo;
+          if (document.getElementById('display-logo')) document.getElementById('display-logo').remove();
+          displayContent.appendChild(logoElement);
+        } else if (document.getElementById('display-logo')) {
+          document.getElementById('display-logo').remove();
+        }
       } catch (error) {
-        alert('Error: ' + error.message);
+        console.error('Error fetching state:', error);
       }
     }
 
-    async function uploadMedia() {
-      const fileInput = document.getElementById('media-upload');
-      if (!fileInput.files[0]) {
-        alert('Selecciona un archivo');
-        return;
-      }
-      const formData = new FormData();
-      formData.append('media', fileInput.files[0]);
-      try {
-        const response = await fetch(`${backendUrl}/upload`, {
-          method: 'POST',
-          body: formData
-        });
-        if (!response.ok) throw new Error('Error al subir archivo');
-        const { path } = await response.json();
-        await setState({ media: path, text: null, background: currentBackground, logo: null });
-        fileInput.value = '';
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    }
-
-    function setColor(color) {
-      currentBackground = { type: 'color', value: color };
-      setState({ background: currentBackground });
-      const preview = document.getElementById('text-preview');
-      preview.style.backgroundColor = color;
-      preview.style.animation = 'none';
-    }
-
-    function setAnimatedBackground(colors) {
-      currentBackground = { type: 'animatedBackground', value: colors };
-      setState({ background: currentBackground });
-      const preview = document.getElementById('text-preview');
-      preview.style.setProperty('--color1', colors[0]);
-      preview.style.setProperty('--color2', colors[1]);
-      preview.style.setProperty('--color3', colors[2] || colors[0]);
-      preview.style.animation = 'backgroundAnimation 15s infinite';
-    }
-
-    function setLogo(logoUrl) {
-      currentLogo = logoUrl;
-      const logoImage = document.getElementById('logo-image');
-      logoImage.src = logoUrl;
-      logoImage.onerror = () => {
-        alert('Error al cargar el logo. Verifica la URL o la disponibilidad del archivo.');
-      };
-      document.getElementById('preview-logo').style.display = 'block';
-      document.getElementById('hide-logo-btn').style.display = 'block';
-      setState({ text: null, background: currentBackground, media: null, logo: currentLogo });
-    }
-
-    function updateTextPreview() {
-      const text = document.getElementById('custom-text').value || 'ORION eventos';
-      const font = document.getElementById('text-font').value;
-      const size = document.getElementById('text-size').value + 'px';
-      const color = document.getElementById('text-color').value;
-      const textPosition = document.getElementById('text-position').value;
-      const previewText = document.getElementById('preview-text');
-
-      previewText.textContent = text;
-      previewText.style.fontFamily = `'${font}', sans-serif`;
-      previewText.style.fontSize = size;
-      previewText.style.color = color;
-      previewText.style.top = `${textPosition}%`;
-      previewText.style.transform = 'translateY(-50%)';
-
-      const logoPosition = document.getElementById('logo-position').value;
-      const previewLogo = document.getElementById('preview-logo');
-      previewLogo.style.top = `${logoPosition}%`;
-      previewLogo.style.transform = 'translateY(-50%)';
-    }
-
-    document.getElementById('admin-password').addEventListener('input', (e) => {
-      if (e.target.value === 'admin123') {
-        document.getElementById('admin-panel').style.display = 'block';
-      }
-    });
-
-    document.getElementById('upload-btn').addEventListener('click', uploadMedia);
-    document.getElementById('custom-color-btn').addEventListener('click', () => {
-      const color = document.getElementById('custom-color').value;
-      setColor(color);
-    });
-
-    document.getElementById('animated-bg-btn').addEventListener('click', () => {
-      const color1 = document.getElementById('bg-color1').value;
-      const color2 = document.getElementById('bg-color2').value;
-      const color3 = document.getElementById('bg-color3').value;
-      setAnimatedBackground([color1, color2, color3]);
-    });
-
-    document.getElementById('text-btn').addEventListener('click', () => {
-      const text = document.getElementById('custom-text').value;
-      const font = document.getElementById('text-font').value;
-      const size = document.getElementById('text-size').value;
-      const color = document.getElementById('text-color').value;
-      const position = document.getElementById('text-position').value;
-      if (!text) {
-        alert('Por favor, ingresa un texto');
-        return;
-      }
-      const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
-      setState({ text: textConfig, background: currentBackground, media: null, logo: currentLogo });
-    });
-
-    document.getElementById('logo-black-btn').addEventListener('click', () => {
-      setLogo(logoBlackUrl);
-    });
-
-    document.getElementById('logo-white-btn').addEventListener('click', () => {
-      setLogo(logoWhiteUrl);
-    });
-
-    document.getElementById('hide-logo-btn').addEventListener('click', () => {
-      document.getElementById('preview-logo').style.display = 'none';
-      document.getElementById('hide-logo-btn').style.display = 'none';
-      currentLogo = null;
-      setState({ text: null, background: currentBackground, media: null, logo: null });
-    });
-
-    document.getElementById('custom-text').addEventListener('input', updateTextPreview);
-    document.getElementById('text-font').addEventListener('change', updateTextPreview);
-    document.getElementById('text-size').addEventListener('change', updateTextPreview);
-    document.getElementById('text-color').addEventListener('input', updateTextPreview);
-    document.getElementById('text-position').addEventListener('input', (e) => {
-      document.getElementById('position-value').textContent = `${e.target.value}%`;
-      updateTextPreview();
-    });
-    document.getElementById('logo-position').addEventListener('input', (e) => {
-      document.getElementById('logo-position-value').textContent = `${e.target.value}%`;
-      updateTextPreview();
-    });
-
-    updateTextPreview();
+    // Actualizar cada 1 segundo
+    setInterval(updateDisplay, 1000);
+    updateDisplay(); // Inicialización
   </script>
 </body>
 </html>
