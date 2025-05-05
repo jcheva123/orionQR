@@ -5,23 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OrionQR - Control Totem</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #F8E1E9; }
+    body {
+      background: linear-gradient(135deg, #0d0d0d, #1a1a2e);
+      color: #e0e0e0;
+      overflow-x: hidden;
+    }
     #admin-panel { display: none; }
     .text-preview {
-      width: 256px;
+      width: 100%;
+      max-width: 256px;
       height: 704px;
-      background-color: #F8E1E9;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid #00d4ff;
+      border-radius: 10px;
       position: relative;
       overflow: hidden;
-      margin-bottom: 1rem;
+      margin: 1rem auto;
     }
     .preview-text {
       position: absolute;
       width: 100%;
       text-align: center;
       white-space: pre-wrap;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
       animation: subtleAnimation 30s infinite;
     }
     @keyframes subtleAnimation {
@@ -32,72 +41,103 @@
       100% { opacity: 0; transform: translateY(20px); }
     }
     @keyframes backgroundAnimation {
-      0% { background-color: var(--color1); }
-      33% { background-color: var(--color2); }
-      66% { background-color: var(--color3, var(--color1)); }
-      100% { background-color: var(--color1); }
+      0% { background: linear-gradient(45deg, var(--color1), var(--color2)); }
+      50% { background: linear-gradient(45deg, var(--color2), var(--color3, var(--color1))); }
+      100% { background: linear-gradient(45deg, var(--color1), var(--color2)); }
+    }
+    @keyframes neonGlow {
+      0% { box-shadow: 0 0 5px #00d4ff, 0 0 10px #00d4ff; }
+      50% { box-shadow: 0 0 10px #00ffcc, 0 0 20px #ff00ff; }
+      100% { box-shadow: 0 0 5px #00d4ff, 0 0 10px #00d4ff; }
+    }
+    .tech-button {
+      background: linear-gradient(90deg, #00d4ff, #ff00ff);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 0 5px #00d4ff;
+    }
+    .tech-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00ffcc, 0 0 30px #ff00ff;
+      animation: neonGlow 1.5s infinite;
+    }
+    .input-field {
+      background: #1a1a2e;
+      border: 1px solid #00d4ff;
+      color: #e0e0e0;
+      border-radius: 8px;
+      padding: 0.5rem;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: #00ffcc;
+      box-shadow: 0 0 10px #00ffcc;
     }
   </style>
 </head>
-<body class="font-['Playfair_Display'] text-gray-800">
+<body class="font-['Playfair_Display'] text-gray-200">
   <div class="min-h-screen flex flex-col items-center justify-center p-4">
-    <h1 class="text-3xl text-[#D4A017] mb-6">OrionQR - Control Totem LED</h1>
-    <input id="admin-password" type="password" placeholder="Contraseña" class="w-full max-w-md p-2 mb-4 border rounded">
-    
-    <div id="admin-panel" class="w-full max-w-md bg-white p-6 rounded shadow">
-      <h2 class="text-2xl mb-4">Opciones</h2>
-      
+    <h1 class="text-4xl md:text-5xl text-[#00d4ff] mb-6 font-['Orbitron'] shadow-lg">OrionQR - Control Totem</h1>
+    <input id="admin-password" type="password" placeholder="Contraseña" class="input-field w-full max-w-md mb-4">
+
+    <div id="admin-panel" class="w-full max-w-md bg-[#0d0d0d] p-6 rounded-lg shadow-lg border border-[#00d4ff]">
+      <h2 class="text-2xl md:text-3xl mb-4 text-[#ff00ff] font-['Orbitron']">Opciones</h2>
+
       <div class="mb-6">
-        <h3 class="text-xl mb-2">Cargar Foto/Video</h3>
-        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="w-full p-2 border rounded">
-        <button id="upload-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Subir y Mostrar</button>
+        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Cargar Foto/Video</h3>
+        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="input-field w-full p-2 mb-2">
+        <button id="upload-btn" class="tech-button w-full">Subir y Mostrar</button>
       </div>
-      
+
       <div class="mb-6">
-        <h3 class="text-xl mb-2">Color de Fondo</h3>
+        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Color de Fondo</h3>
         <div class="grid grid-cols-3 gap-2">
-          <button class="bg-black text-white p-2 rounded" onclick="setColor('black')">Negro (Apagar)</button>
-          <button class="bg-red-500 text-white p-2 rounded" onclick="setColor('red')">Rojo</button>
-          <button class="bg-blue-500 text-white p-2 rounded" onclick="setColor('blue')">Azul</button>
-          <button class="bg-green-500 text-white p-2 rounded" onclick="setColor('green')">Verde</button>
-          <button class="bg-yellow-500 text-white p-2 rounded" onclick="setColor('yellow')">Amarillo</button>
-          <button class="bg-[#F8E1E9] text-gray-800 p-2 rounded border" onclick="setColor('#F8E1E9')">Rosa</button>
+          <button class="tech-button p-2" onclick="setColor('black')">Negro</button>
+          <button class="tech-button p-2" onclick="setColor('red')">Rojo</button>
+          <button class="tech-button p-2" onclick="setColor('blue')">Azul</button>
+          <button class="tech-button p-2" onclick="setColor('green')">Verde</button>
+          <button class="tech-button p-2" onclick="setColor('yellow')">Amarillo</button>
+          <button class="tech-button p-2" onclick="setColor('#F8E1E9')">Rosa</button>
         </div>
-        <input id="custom-color" type="color" class="mt-2 w-full h-10">
-        <button id="custom-color-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Color Personalizado</button>
+        <input id="custom-color" type="color" class="input-field mt-2 w-full h-10">
+        <button id="custom-color-btn" class="tech-button mt-2 w-full">Aplicar Color</button>
         <div class="mt-4">
-          <h4 class="text-lg mb-2">Fondo Animado</h4>
+          <h4 class="text-lg md:text-xl mb-2 text-[#ff00ff]">Fondo Animado</h4>
           <div class="mb-2">
-            <label class="block mb-1">Color 1:</label>
-            <input id="bg-color1" type="color" value="#F8E1E9" class="w-full h-10">
+            <label class="block mb-1 text-[#00ffcc]">Color 1:</label>
+            <input id="bg-color1" type="color" value="#F8E1E9" class="input-field w-full h-10">
           </div>
           <div class="mb-2">
-            <label class="block mb-1">Color 2:</label>
-            <input id="bg-color2" type="color" value="#D4A017" class="w-full h-10">
+            <label class="block mb-1 text-[#00ffcc]">Color 2:</label>
+            <input id="bg-color2" type="color" value="#D4A017" class="input-field w-full h-10">
           </div>
           <div class="mb-2">
-            <label class="block mb-1">Color 3 (opcional):</label>
-            <input id="bg-color3" type="color" value="#FFFFFF" class="w-full h-10">
+            <label class="block mb-1 text-[#00ffcc]">Color 3 (opcional):</label>
+            <input id="bg-color3" type="color" value="#FFFFFF" class="input-field w-full h-10">
           </div>
-          <button id="animated-bg-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Fondo Animado</button>
+          <button id="animated-bg-btn" class="tech-button w-full">Aplicar Fondo</button>
         </div>
       </div>
-      
+
       <div class="mb-6">
-        <h3 class="text-xl mb-2">Texto Personalizado</h3>
-        <textarea id="custom-text" rows="3" placeholder="Ej: Boda de Alejo\n& Valentina" class="w-full p-2 mb-2 border rounded resize-none"></textarea>
+        <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Texto Personalizado</h3>
+        <textarea id="custom-text" rows="3" placeholder="Ej: Boda de Alejo\n& Valentina" class="input-field w-full p-2 mb-2 resize-none"></textarea>
         <div class="mb-2">
-          <label class="block mb-1">Tipografía:</label>
-          <select id="text-font" class="w-full p-2 border rounded">
+          <label class="block mb-1 text-[#00ffcc]">Tipografía:</label>
+          <select id="text-font" class="input-field w-full p-2">
             <option value="Playfair Display">Playfair Display</option>
+            <option value="Orbitron">Orbitron</option>
             <option value="Roboto">Roboto</option>
-            <option value="Montserrat">Montserrat</option>
-            <option value="Lobster">Lobster</option>
           </select>
         </div>
         <div class="mb-2">
-          <label class="block mb-1">Tamaño del Texto:</label>
-          <select id="text-size" class="w-full p-2 border rounded">
+          <label class="block mb-1 text-[#00ffcc]">Tamaño del Texto:</label>
+          <select id="text-size" class="input-field w-full p-2">
             <option value="20">Pequeño (20px)</option>
             <option value="30">Mediano (30px)</option>
             <option value="40">Grande (40px)</option>
@@ -105,18 +145,18 @@
           </select>
         </div>
         <div class="mb-2">
-          <label class="block mb-1">Color del Texto:</label>
-          <input id="text-color" type="color" class="w-full h-10">
+          <label class="block mb-1 text-[#00ffcc]">Color del Texto:</label>
+          <input id="text-color" type="color" class="input-field w-full h-10">
         </div>
         <div class="mb-2">
-          <label class="block mb-1">Posición Vertical:</label>
+          <label class="block mb-1 text-[#00ffcc]">Posición Vertical:</label>
           <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
-          <span id="position-value" class="text-sm text-gray-600">50%</span>
+          <span id="position-value" class="text-sm text-[#00d4ff]">50%</span>
         </div>
         <div class="text-preview" id="text-preview">
           <div class="preview-text" id="preview-text">Texto de ejemplo</div>
         </div>
-        <button id="text-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Texto</button>
+        <button id="text-btn" class="tech-button w-full">Aplicar Texto</button>
       </div>
     </div>
   </div>
@@ -124,7 +164,6 @@
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
 
-    // Track the current background state
     let currentBackground = { type: 'color', value: '#F8E1E9' };
 
     async function setState({ text, background, media }) {
@@ -155,9 +194,7 @@
         });
         if (!response.ok) throw new Error('Error al subir archivo');
         const { path } = await response.json();
-        const fullMediaUrl = path;
-
-        await setState({ media: fullMediaUrl, text: null, background: currentBackground });
+        await setState({ media: path, text: null, background: currentBackground });
         fileInput.value = '';
       } catch (error) {
         alert('Error: ' + error.message);
@@ -191,7 +228,7 @@
       const previewText = document.getElementById('preview-text');
 
       previewText.textContent = text;
-      previewText.style.fontFamily = `'${font}', serif`;
+      previewText.style.fontFamily = `'${font}', sans-serif`;
       previewText.style.fontSize = size;
       previewText.style.color = color;
       previewText.style.top = `${position}%`;
@@ -242,6 +279,6 @@
 
     updateTextPreview();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93893b37c8b5c000',t:'MTc0NjAzOTA5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+  <!-- Remove Cloudflare scripts for simplicity in this context -->
 </body>
 </html>
