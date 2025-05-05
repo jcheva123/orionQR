@@ -175,6 +175,7 @@
           <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
           <span id="position-value" class="text-sm text-[#00d4ff]">50%</span>
         </div>
+        <button id="text-btn" class="tech-button w-full mb-4">Aplicar Texto</button>
         <div class="text-preview" id="text-preview">
           <div class="preview-text" id="preview-text">ORION eventos</div>
           <div class="preview-logo" id="preview-logo" style="display: none;">
@@ -182,15 +183,16 @@
           </div>
         </div>
         <div class="mt-2">
-          <label class="block mb-1 text-[#00ffcc]">Subir Logo (PNG):</label>
-          <input id="logo-upload" type="file" accept="image/png" class="input-field w-full p-2 mb-2">
-          <button id="logo-btn" class="tech-button w-full mb-2">Subir Logo</button>
-          <button id="hide-logo-btn" class="tech-button w-full" style="display: none;">Ocultar Logo</button>
+          <h3 class="text-xl md:text-2xl mb-2 text-[#00ffcc]">Logo Orion</h3>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <button id="logo-black-btn" class="tech-button bg-gray-800 text-white p-2">Logo Negro</button>
+            <button id="logo-white-btn" class="tech-button bg-gray-200 text-black p-2">Logo Blanco</button>
+          </div>
+          <button id="hide-logo-btn" class="tech-button w-full mb-2" style="display: none;">Ocultar Logo</button>
           <label class="block mb-1 text-[#00ffcc]">Posición Vertical Logo:</label>
           <input id="logo-position" type="range" min="0" max="100" value="50" class="w-full">
           <span id="logo-position-value" class="text-sm text-[#00d4ff]">50%</span>
         </div>
-        <button id="text-btn" class="tech-button w-full mt-2">Aplicar Texto</button>
       </div>
     </div>
   </div>
@@ -199,6 +201,9 @@
     const backendUrl = 'https://orionqr.onrender.com';
     let currentBackground = { type: 'color', value: '#F8E1E9' };
     let currentLogo = null;
+
+    const logoBlackUrl = 'https://asset.cloudinary.com/ddhie4lad/d997d52d75d349b706609f185a122274?w=256&h=704&c=fit';
+    const logoWhiteUrl = 'https://asset.cloudinary.com/ddhie4lad/c673271c66f78905954bc6b500198933?w=256&h=704&c=fit';
 
     async function setState({ text, background, media, logo }) {
       try {
@@ -228,33 +233,7 @@
         });
         if (!response.ok) throw new Error('Error al subir archivo');
         const { path } = await response.json();
-        await setState({ media: path, text: null, background: currentBackground, logo: currentLogo });
-        fileInput.value = '';
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    }
-
-    async function uploadLogo() {
-      const fileInput = document.getElementById('logo-upload');
-      if (!fileInput.files[0]) {
-        alert('Selecciona un logo PNG');
-        return;
-      }
-      const formData = new FormData();
-      formData.append('logo', fileInput.files[0]);
-      try {
-        const response = await fetch(`${backendUrl}/upload-logo`, {
-          method: 'POST',
-          body: formData
-        });
-        if (!response.ok) throw new Error('Error al subir logo');
-        const { path } = await response.json();
-        currentLogo = path + '?w=256&h=704&c=fit'; // Escala al tamaño del totem
-        document.getElementById('logo-image').src = currentLogo;
-        document.getElementById('preview-logo').style.display = 'block';
-        document.getElementById('hide-logo-btn').style.display = 'block';
-        await setState({ text: null, background: currentBackground, media: null, logo: currentLogo });
+        await setState({ media: path, text: null, background: currentBackground, logo: null });
         fileInput.value = '';
       } catch (error) {
         alert('Error: ' + error.message);
@@ -277,6 +256,14 @@
       preview.style.setProperty('--color2', colors[1]);
       preview.style.setProperty('--color3', colors[2] || colors[0]);
       preview.style.animation = 'backgroundAnimation 15s infinite';
+    }
+
+    function setLogo(logoUrl) {
+      currentLogo = logoUrl;
+      document.getElementById('logo-image').src = logoUrl;
+      document.getElementById('preview-logo').style.display = 'block';
+      document.getElementById('hide-logo-btn').style.display = 'block';
+      setState({ text: null, background: currentBackground, media: null, logo: currentLogo });
     }
 
     function updateTextPreview() {
@@ -333,7 +320,14 @@
       setState({ text: textConfig, background: currentBackground, media: null, logo: currentLogo });
     });
 
-    document.getElementById('logo-btn').addEventListener('click', uploadLogo);
+    document.getElementById('logo-black-btn').addEventListener('click', () => {
+      setLogo(logoBlackUrl);
+    });
+
+    document.getElementById('logo-white-btn').addEventListener('click', () => {
+      setLogo(logoWhiteUrl);
+    });
+
     document.getElementById('hide-logo-btn').addEventListener('click', () => {
       document.getElementById('preview-logo').style.display = 'none';
       document.getElementById('hide-logo-btn').style.display = 'none';
