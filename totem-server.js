@@ -22,7 +22,7 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Formato no permitido. Usa JPEG, PNG, MP4 o MOV.'));
   },
-  limits: { fileSize: 100 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 } // Reducido a 50 MB para pruebas
 });
 
 // Crear carpeta temporal
@@ -50,7 +50,7 @@ async function loadState() {
     const data = await fs.readFile(stateFile, 'utf8');
     state = JSON.parse(data);
   } catch (error) {
-    // No se pudo cargar estado anterior, usar valor por defecto
+    console.log('No se pudo cargar el estado anterior:', error.message);
   }
 }
 
@@ -63,24 +63,24 @@ loadState();
 // Subida de archivos multimedia (fotos/videos)
 app.post('/upload', upload.single('media'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo' });
+  console.log('Subiendo archivo:', req.file.originalname, 'Tamaño:', req.file.size, 'bytes');
   try {
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: 'orionQR',
       resource_type: 'auto',
       transformation: [
-        { width: 256, height: 704, crop: 'pad', background: 'black' },
-        { quality: 'auto', fetch_format: 'auto' },
-        { bit_rate: '500k' }
+        { width: 256, height: 704, crop: 'pad' } // Simplificado, sin background ni optimizaciones avanzadas
       ]
     });
 
+    console.log('Archivo subido a Cloudinary:', result.secure_url);
     state.media = result.secure_url;
     state.text = null;
     await saveState();
     await fs.unlink(req.file.path);
     res.json({ path: result.secure_url });
   } catch (error) {
-    console.error('Error subiendo a Cloudinary:', error);
+    console.error('Error subiendo a Cloudinary:', error.message, error.response ? error.response.data : '');
     res.status(500).json({ error: 'Error al subir a Cloudinary: ' + error.message });
   }
 });
