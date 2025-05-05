@@ -29,18 +29,19 @@ const upload = multer({
 const uploadsDir = path.join(__dirname, 'temp');
 fs.mkdir(uploadsDir, { recursive: true });
 
-// Configurar Cloudinary desde variable de entorno
+// Configurar Cloudinary desde variables de entorno
 cloudinary.config({
-  cloud_name: 'ddhie4lad',
-  api_key: '493144731521638',
-  api_secret: 'BaXbAjm8dhSafVKBGY5g5liGjAo'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 // Estado inicial
 let state = {
   text: null,
   background: { type: 'color', value: '#F8E1E9' },
-  media: null
+  media: null,
+  logo: null
 };
 const stateFile = path.join(__dirname, 'state.json');
 
@@ -59,13 +60,18 @@ async function saveState() {
 
 loadState();
 
-// Subida de archivos a Cloudinary
+// Subida de archivos multimedia (fotos/videos)
 app.post('/upload', upload.single('media'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo' });
   try {
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: 'orionQR',
-      resource_type: 'auto'
+      resource_type: 'auto',
+      transformation: [
+        { width: 256, height: 704, crop: 'pad', background: 'black' },
+        { quality: 'auto', fetch_format: 'auto' },
+        { bit_rate: '500k' }
+      ]
     });
 
     state.media = result.secure_url;
@@ -79,16 +85,39 @@ app.post('/upload', upload.single('media'), async (req, res) => {
   }
 });
 
+// Subida de logos
+app.post('/upload-logo', upload.single('logo'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No se subió ningún logo' });
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'orionQR/logos',
+      resource_type: 'image',
+      transformation: [
+        { width: 256, height: 704, crop: 'fit' }
+      ]
+    });
+
+    state.logo = result.secure_url;
+    await saveState();
+    await fs.unlink(req.file.path);
+    res.json({ path: result.secure_url });
+  } catch (error) {
+    console.error('Error subiendo logo a Cloudinary:', error);
+    res.status(500).json({ error: 'Error al subir logo a Cloudinary: ' + error.message });
+  }
+});
+
 // Estado actual
 app.get('/state', (req, res) => {
   res.json(state);
 });
 
 app.post('/state', (req, res) => {
-  const { text, background, media } = req.body;
+  const { text, background, media, logo } = req.body;
   if (text !== undefined) state.text = text;
   if (background !== undefined) state.background = background;
   if (media !== undefined) state.media = media;
+  if (logo !== undefined) state.logo = logo;
   saveState();
   res.json(state);
 });
