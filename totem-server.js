@@ -40,7 +40,8 @@ cloudinary.config({
 let state = {
   text: null,
   background: { type: 'color', value: '#F8E1E9' },
-  media: null
+  media: null,
+  logo: null
 };
 const stateFile = path.join(__dirname, 'state.json');
 
@@ -70,6 +71,7 @@ app.post('/upload', upload.single('media'), async (req, res) => {
 
     state.media = result.secure_url;
     state.text = null;
+    state.logo = null;
     await saveState();
     await fs.unlink(req.file.path);
     res.json({ path: result.secure_url });
@@ -85,10 +87,11 @@ app.get('/state', (req, res) => {
 });
 
 app.post('/state', (req, res) => {
-  const { text, background, media } = req.body;
+  const { text, background, media, logo } = req.body;
   if (text !== undefined) state.text = text;
   if (background !== undefined) state.background = background;
   if (media !== undefined) state.media = media;
+  if (logo !== undefined) state.logo = logo;
   saveState();
   res.json(state);
 });
