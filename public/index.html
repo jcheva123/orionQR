@@ -125,7 +125,7 @@
       transition: max-height 0.3s ease;
     }
     .accordion-content.open {
-      max-height: 1200px;
+      max-height: 1200px; /* Increased to accommodate larger preview */
     }
     .tooltip {
       position: relative;
@@ -320,7 +320,10 @@
         const { path } = await response.json();
         const fullMediaUrl = path;
 
-        await setState({ media: fullMediaUrl, text: null, background: current 오류: ' + error.message);
+        await setState({ media: fullMediaUrl, text: null, background: currentBackground });
+        fileInput.value = '';
+      } catch (error) {
+        alert('Error: ' + error.message);
       }
     }
 
