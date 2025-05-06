@@ -3,12 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OrionQR - Control Totem</title>
+  <title>OrionQR - Control Totem LED</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { background-color: #F8E1E9; }
-    #admin-panel { display: none; }
+    body {
+      background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
+      transition: background 0.5s;
+    }
+    body.light-mode {
+      background: linear-gradient(135deg, #f3e7e9 0%, #e3eeff 100%);
+    }
+    #admin-panel {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
     .text-preview {
       width: 256px;
       height: 704px;
@@ -16,6 +28,9 @@
       position: relative;
       overflow: hidden;
       margin-bottom: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     .preview-text {
       position: absolute;
@@ -41,102 +56,237 @@
       animation: backgroundAnimation var(--animation-duration, 15s) infinite;
     }
     .color-input {
-      width: 50px; /* Reduced size for compactness */
+      width: 50px;
       height: 30px;
+    }
+    .btn-primary {
+      background: linear-gradient(45deg, #D4A017, #FFD700);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.4s, height 0.4s;
+    }
+    .btn-primary:active::after {
+      width: 200px;
+      height: 200px;
+    }
+    .btn-secondary {
+      background: linear-gradient(45deg, #4B5EAA, #6B7280);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-secondary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .color-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      transition: transform 0.2s;
+    }
+    .color-btn:hover {
+      transform: scale(1.1);
+    }
+    .accordion-header {
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.75rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .accordion-header:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .accordion-content.open {
+      max-height: 1000px;
+    }
+    .tooltip {
+      position: relative;
+    }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    #particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      ring: 2px solid #D4A017;
+      box-shadow: 0 0 8px rgba(212, 160, 23, 0.5);
     }
   </style>
 </head>
-<body class="font-['Playfair_Display'] text-gray-800">
-  <div class="min-h-screen flex flex-col items-center justify-center p-4">
-    <h1 class="text-3xl text-[#D4A017] mb-6">OrionQR - Control Totem LED</h1>
-    <input id="admin-password" type="password" placeholder="Contraseña" class="w-full max-w-md p-2 mb-4 border rounded">
+<body class="font-['Playfair_Display'] text-gray-200">
+  <canvas id="particles"></canvas>
+  <div class="min-h-screen flex flex-col items-center justify-center p-4 relative">
+    <div class="flex justify-between w-full max-w-md mb-4">
+      <h1 class="text-3xl text-[#D4A017] font-bold">OrionQR - Control Totem LED</h1>
+      <button id="theme-toggle" class="btn-secondary tooltip" data-tooltip="Cambiar Tema">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+    <input id="admin-password" type="password" placeholder="Contraseña" class="w-full max-w-md p-2 mb-4 border rounded bg-gray-800 text-white border-gray-600 focus:ring-2 focus:ring-[#D4A017]">
     
-    <div id="admin-panel" class="w-full max-w-md bg-white p-6 rounded shadow">
+    <div id="admin-panel" class="w-full max-w-md p-6 rounded-lg">
       <h2 class="text-2xl mb-4">Opciones</h2>
       
       <div class="mb-6">
-        <h3 class="text-xl mb-2">Cargar Foto/Video</h3>
-        <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="w-full p-2 border rounded">
-        <button id="upload-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Subir y Mostrar</button>
+        <div class="accordion-header flex justify-between items-center">
+          <h3 class="text-xl">Cargar Foto/Video</h3>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="accordion-content">
+          <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="w-full p-2 border rounded bg-gray-800 text-white border-gray-600">
+          <button id="upload-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Subir archivo">
+            <i class="fas fa-upload mr-2"></i>Subir y Mostrar
+          </button>
+        </div>
       </div>
       
       <div class="mb-6">
-        <h3 class="text-xl mb-2">Color de Fondo</h3>
-        <div class="grid grid-cols-3 gap-2">
-          <button class="bg-black text-white p-2 rounded" onclick="setColor('black')">Negro (Apagar)</button>
-          <button class="bg-red-500 text-white p-2 rounded" onclick="setColor('red')">Rojo</button>
-          <button class="bg-blue-500 text-white p-2 rounded" onclick="setColor('blue')">Azul</button>
-          <button class="bg-green-500 text-white p-2 rounded" onclick="setColor('green')">Verde</button>
-          <button class="bg-yellow-500 text-white p-2 rounded" onclick="setColor('yellow')">Amarillo</button>
-          <button class="bg-[#F8E1E9] text-gray-800 p-2 rounded border" onclick="setColor('#F8E1E9')">Rosa</button>
+        <div class="accordion-header flex justify-between items-center">
+          <h3 class="text-xl">Color de Fondo</h3>
+          <i class="fas fa-chevron-down"></i>
         </div>
-        <input id="custom-color" type="color" class="mt-2 w-full h-10">
-        <button id="custom-color-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Color Personalizado</button>
-        <div class="mt-4">
-          <h4 class="text-lg mb-2">Fondo Animado</h4>
-          <div class="mb-2 flex items-center">
-            <label class="block mr-2">Color 1:</label>
-            <input id="bg-color1" type="color" value="#F8E1E9" class="color-input">
+        <div class="accordion-content">
+          <div class="grid grid-cols-3 gap-2 my-4">
+            <button class="color-btn bg-black tooltip" onclick="setColor('black')" data-tooltip="Negro (Apagar)"></button>
+            <button class="color-btn bg-red-500 tooltip" onclick="setColor('red')" data-tooltip="Rojo"></button>
+            <button class="color-btn bg-blue-500 tooltip" onclick="setColor('blue')" data-tooltip="Azul"></button>
+            <button class="color-btn bg-green-500 tooltip" onclick="setColor('green')" data-tooltip="Verde"></button>
+            <button class="color-btn bg-yellow-500 tooltip" onclick="setColor('yellow')" data-tooltip="Amarillo"></button>
+            <button class="color-btn bg-[#F8E1E9] border-gray-400 tooltip" onclick="setColor('#F8E1E9')" data-tooltip="Rosa"></button>
           </div>
-          <div class="mb-2 flex items-center">
-            <label class="block mr-2">Color 2:</label>
-            <input id="bg-color2" type="color" value="#D4A017" class="color-input">
+          <input id="custom-color" type="color" class="mt-2 w-full h-10 bg-gray-800 border-gray-600">
+          <button id="custom-color-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Aplicar color">
+            <i class="fas fa-palette mr-2"></i>AaAplicar Color Personalizado
+          </button>
+          <div class="mt-4">
+            <h4 class="text-lg mb-2">Fondo Animado</h4>
+            <div class="mb-2 flex items-center">
+              <label class="block mr-2">Color 1:</label>
+              <input id="bg-color1" type="color" value="#F8E1E9" class="color-input bg-gray-800 border-gray-600">
+            </div>
+            <div class="mb-2 flex items-center">
+              <label class="block mr-2">Color 2:</label>
+              <input id="bg-color2" type="color" value="#D4A017" class="color-input bg-gray-800 border-gray-600">
+            </div>
+            <div class="mb-2 flex items-center">
+              <label class="block mr-2">Color 3 (opcional):</label>
+              <input id="bg-color3" type="color" value="#FFFFFF" class="color-input bg-gray-800 border-gray-600">
+            </div>
+            <div class="mb-2">
+              <label class="block mb-1">Velocidad Fondo:</label>
+              <input id="bg-speed" type="range" min="1" max="30" value="15" class="w-full">
+              <span id="bg-speed-value" class="text-sm text-gray-400">15s</span>
+            </div>
+            <button id="animated-bg-btn" class="w-full btn-primary tooltip" data-tooltip="Aplicar fondo animado">
+              <i class="fas fa-play mr-2"></i>Aplicar Fondo Animado
+            </button>
+            <div class="mt-2">
+              <button id="strobe-btn" class="w-full btn-primary tooltip" data-tooltip="Activar/Desactivar strobe">
+                <i class="fas fa-bolt mr-2"></i>Strobe
+              </button>
+              <label class="block mb-1 mt-2">Velocidad Strobe:</label>
+              <input id="strobe-speed" type="range" min="50" max="1000" value="100" class="w-full">
+              <span id="strobe-speed-value" class="text-sm text-gray-400">100ms</span>
+            </div>
+            <button id="random-colors-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Colores aleatorios">
+              <i class="fas fa-dice mr-2"></i>Colores Random
+            </button>
           </div>
-          <div class="mb-2 flex items-center">
-            <label class="block mr-2">Color 3 (opcional):</label>
-            <input id="bg-color3" type="color" value="#FFFFFF" class="color-input">
+        </div>
+      </div>
+      
+      <div class="mb-6">
+        <div classuchen="accordion-header flex justify-between items-center">
+          <h3 class="text-xl">Texto Personalizado</h3>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="accordion-content">
+          <textarea id="custom-text" rows="3" placeholder="Ej: Boda de Alejo\n& Valentina" class="w-full p-2 mb-2 border rounded bg-gray-800 text-white border-gray-600 resize-none"></textarea>
+          <div class="mb-2">
+            <label class="block mb-1">Tipografía:</label>
+            <select id="text-font" class="w-full p-2 border rounded bg-gray-800 text-white border-gray-600">
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Lobster">Lobster</option>
+            </select>
           </div>
           <div class="mb-2">
-            <label class="block mb-1">Velocidad Fondo:</label>
-            <input id="bg-speed" type="range" min="1" max="30" value="15" class="w-full">
-            <span id="bg-speed-value" class="text-sm text-gray-600">15s</span>
+            <label class="block mb-1">Tamaño del Texto:</label>
+            <select id="text-size" class="w-full p-2 border rounded bg-gray-800 text-white border-gray-600">
+              <option value="20">Pequeño (20px)</option>
+              <option value="30">Mediano (30px)</option>
+              <option value="40">Grande (40px)</option>
+              <option value="50">Muy Grande (50px)</option>
+            </select>
           </div>
-          <button id="animated-bg-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Fondo Animado</button>
-          <div class="mt-2">
-            <button id="strobe-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Strobe</button>
-            <label class="block mb-1 mt-2">Velocidad Strobe:</label>
-            <input id="strobe-speed" type="range" min="50" max="1000" value="100" class="w-full">
-            <span id="strobe-speed-value" class="text-sm text-gray-600">100ms</span>
+          <div class="mb-2">
+            <label class="block mb-1">Color del Texto:</label>
+            <input id="text-color" type="color" class="w-full h-10 bg-gray-800 border-gray-600">
           </div>
-          <button id="random-colors-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Colores Random</button>
+          <div class="mb-2">
+            <label class="block mb-1">Posición Vertical:</label>
+            <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
+            <span id="position-value" class="text-sm text-gray-400">50%</span>
+          </div>
+          <div class="text-preview" id="text-preview">
+            <div class="preview-text" id="preview-text">Texto de ejemplo</div>
+          </div>
+          <button id="text-btn" class="w-full btn-primary tooltip" data-tooltip="Aplicar texto">
+            <i class="fas fa-text-height mr-2"></i>Aplicar Texto
+          </button>
         </div>
       </div>
-      
-      <div class="mb-6">
-        <h3 class="text-xl mb-2">Texto Personalizado</h3>
-        <textarea id="custom-text" rows="3" placeholder="Ej: Boda de Alejo\n& Valentina" class="w-full p-2 mb-2 border rounded resize-none"></textarea>
-        <div class="mb-2">
-          <label class="block mb-1">Tipografía:</label>
-          <select id="text-font" class="w-full p-2 border rounded">
-            <option value="Playfair Display">Playfair Display</option>
-            <option value="Roboto">Roboto</option>
-            <option value="Montserrat">Montserrat</option>
-            <option value="Lobster">Lobster</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <label class="block mb-1">Tamaño del Texto:</label>
-          <select id="text-size" class="w-full p-2 border rounded">
-            <option value="20">Pequeño (20px)</option>
-            <option value="30">Mediano (30px)</option>
-            <option value="40">Grande (40px)</option>
-            <option value="50">Muy Grande (50px)</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <label class="block mb-1">Color del Texto:</label>
-          <input id="text-color" type="color" class="w-full h-10">
-        </div>
-        <div class="mb-2">
-          <label class="block mb-1">Posición Vertical:</label>
-          <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
-          <span id="position-value" class="text-sm text-gray-600">50%</span>
-        </div>
-        <div class="text-preview" id="text-preview">
-          <div class="preview-text" id="preview-text">Texto de ejemplo</div>
-        </div>
-        <button id="text-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Texto</button>
-      </div>
+
+      <button id="reset-btn" class="w-full btn-secondary tooltip" data-tooltip="Restablecer configuración">
+        <i class="fas fa-undo mr-2"></i>Restablecer
+      </button>
     </div>
   </div>
 
@@ -229,7 +379,7 @@
         }, speed);
       } else {
         stopStrobe();
-        setColor('#F8E1E9'); // Reset to default color
+        setColor('#F8E1E9');
       }
     }
 
@@ -257,7 +407,7 @@
         }, 1000);
       } else {
         stopRandomColors();
-        setColor('#F8E1E9'); // Reset to default color
+        setColor('#F8E1E9');
       }
     }
 
@@ -285,6 +435,89 @@
       previewText.style.transform = 'translateY(-50%)';
     }
 
+    function resetSettings() {
+      stopStrobe();
+      stopRandomColors();
+      setColor('#F8E1E9');
+      document.getElementById('custom-text').value = '';
+      document.getElementById('text-font').value = 'Playfair Display';
+      document.getElementById('text-size').value = '30';
+      document.getElementById('text-color').value = '#000000';
+      document.getElementById('text-position').value = '50';
+      document.getElementById('bg-color1').value = '#F8E1E9';
+      document.getElementById('bg-color2').value = '#D4A017';
+      document.getElementById('bg-color3').value = '#FFFFFF';
+      document.getElementById('bg-speed').value = '15';
+      document.getElementById('strobe-speed').value = '100';
+      updateTextPreview();
+      document.getElementById('bg-speed-value').textContent = '15s';
+      document.getElementById('strobe-speed-value').textContent = '100ms';
+      document.getElementById('position-value').textContent = '50%';
+    }
+
+    // Accordion functionality
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const content = header.nextElementSibling;
+        content.classList.toggle('open');
+        header.querySelector('i').classList.toggle('fa-chevron-down');
+        header.querySelector('i').classList.toggle('fa-chevron-up');
+      });
+    });
+
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      const icon = document.getElementById('theme-toggle').querySelector('i');
+      icon.classList.toggle('fa-moon');
+      icon.classList.toggle('fa-sun');
+    });
+
+    // Particle animation
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = [];
+    for (let i = 0; i < 50; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 1,
+        vx: Math.random() * 2 - 1,
+        vy: Math.random() * 2 - 1
+      });
+    }
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fill();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Sound effect for buttons
+    const clickSound = new Audio('https://www.soundjay.com/buttons/button-3.mp3');
+    clickSound.volume = 0.2;
+    document.querySelectorAll('.btn-primary, .btn-secondary, .color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        clickSound.play();
+      });
+    });
+
+    // Event listeners
     document.getElementById('admin-password').addEventListener('input', (e) => {
       if (e.target.value === 'admin123') {
         document.getElementById('admin-panel').style.display = 'block';
@@ -322,7 +555,7 @@
       document.getElementById('strobe-speed-value').textContent = `${e.target.value}ms`;
       if (strobeActive) {
         stopStrobe();
-        toggleStrobe(); // Restart strobe with new speed
+        toggleStrobe();
       }
     });
 
@@ -341,6 +574,8 @@
       const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
       setState({ text: textConfig, background: currentBackground, media: null });
     });
+
+    document.getElementById('reset-btn').addEventListener('click', resetSettings);
 
     document.getElementById('custom-text').addEventListener('input', updateTextPreview);
     document.getElementById('text-font').addEventListener('change', updateTextPreview);
