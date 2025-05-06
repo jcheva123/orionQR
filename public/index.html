@@ -37,6 +37,13 @@
       66% { background-color: var(--color3, var(--color1)); }
       100% { background-color: var(--color1); }
     }
+    .animated-bg {
+      animation: backgroundAnimation var(--animation-duration, 15s) infinite;
+    }
+    .color-input {
+      width: 50px; /* Reduced size for compactness */
+      height: 30px;
+    }
   </style>
 </head>
 <body class="font-['Playfair_Display'] text-gray-800">
@@ -67,19 +74,31 @@
         <button id="custom-color-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Color Personalizado</button>
         <div class="mt-4">
           <h4 class="text-lg mb-2">Fondo Animado</h4>
-          <div class="mb-2">
-            <label class="block mb-1">Color 1:</label>
-            <input id="bg-color1" type="color" value="#F8E1E9" class="w-full h-10">
+          <div class="mb-2 flex items-center">
+            <label class="block mr-2">Color 1:</label>
+            <input id="bg-color1" type="color" value="#F8E1E9" class="color-input">
+          </div>
+          <div class="mb-2 flex items-center">
+            <label class="block mr-2">Color 2:</label>
+            <input id="bg-color2" type="color" value="#D4A017" class="color-input">
+          </div>
+          <div class="mb-2 flex items-center">
+            <label class="block mr-2">Color 3 (opcional):</label>
+            <input id="bg-color3" type="color" value="#FFFFFF" class="color-input">
           </div>
           <div class="mb-2">
-            <label class="block mb-1">Color 2:</label>
-            <input id="bg-color2" type="color" value="#D4A017" class="w-full h-10">
-          </div>
-          <div class="mb-2">
-            <label class="block mb-1">Color 3 (opcional):</label>
-            <input id="bg-color3" type="color" value="#FFFFFF" class="w-full h-10">
+            <label class="block mb-1">Velocidad Fondo:</label>
+            <input id="bg-speed" type="range" min="1" max="30" value="15" class="w-full">
+            <span id="bg-speed-value" class="text-sm text-gray-600">15s</span>
           </div>
           <button id="animated-bg-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Aplicar Fondo Animado</button>
+          <div class="mt-2">
+            <button id="strobe-btn" class="w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Strobe</button>
+            <label class="block mb-1 mt-2">Velocidad Strobe:</label>
+            <input id="strobe-speed" type="range" min="50" max="1000" value="100" class="w-full">
+            <span id="strobe-speed-value" class="text-sm text-gray-600">100ms</span>
+          </div>
+          <button id="random-colors-btn" class="mt-2 w-full bg-[#D4A017] text-white p-2 rounded hover:bg-[#b88a14]">Colores Random</button>
         </div>
       </div>
       
@@ -126,6 +145,10 @@
 
     // Track the current background state
     let currentBackground = { type: 'color', value: '#F8E1E9' };
+    let strobeActive = false;
+    let randomColorsActive = false;
+    let strobeInterval = null;
+    let randomColorInterval = null;
 
     async function setState({ text, background, media }) {
       try {
@@ -165,21 +188,85 @@
     }
 
     function setColor(color) {
+      stopStrobe();
+      stopRandomColors();
       currentBackground = { type: 'color', value: color };
       setState({ background: currentBackground });
       const preview = document.getElementById('text-preview');
       preview.style.backgroundColor = color;
       preview.style.animation = 'none';
+      preview.classList.remove('animated-bg');
     }
 
-    function setAnimatedBackground(colors) {
+    function setAnimatedBackground(colors, duration) {
+      stopStrobe();
+      stopRandomColors();
       currentBackground = { type: 'animatedBackground', value: colors };
       setState({ background: currentBackground });
       const preview = document.getElementById('text-preview');
       preview.style.setProperty('--color1', colors[0]);
       preview.style.setProperty('--color2', colors[1]);
       preview.style.setProperty('--color3', colors[2] || colors[0]);
-      preview.style.animation = 'backgroundAnimation 15s infinite';
+      preview.style.setProperty('--animation-duration', `${duration}s`);
+      preview.style.animation = 'none';
+      preview.classList.add('animated-bg');
+    }
+
+    function toggleStrobe() {
+      stopRandomColors();
+      strobeActive = !strobeActive;
+      const preview = document.getElementById('text-preview');
+      if (strobeActive) {
+        const speed = document.getElementById('strobe-speed').value;
+        let isBlack = false;
+        strobeInterval = setInterval(() => {
+          currentBackground = { type: 'color', value: isBlack ? 'black' : document.getElementById('custom-color').value || '#F8E1E9' };
+          setState({ background: currentBackground });
+          preview.style.backgroundColor = currentBackground.value;
+          preview.style.animation = 'none';
+          preview.classList.remove('animated-bg');
+          isBlack = !isBlack;
+        }, speed);
+      } else {
+        stopStrobe();
+        setColor('#F8E1E9'); // Reset to default color
+      }
+    }
+
+    function stopStrobe() {
+      strobeActive = false;
+      if (strobeInterval) {
+        clearInterval(strobeInterval);
+        strobeInterval = null;
+      }
+    }
+
+    function toggleRandomColors() {
+      stopStrobe();
+      randomColorsActive = !randomColorsActive;
+      const preview = document.getElementById('text-preview');
+      if (randomColorsActive) {
+        randomColorInterval = setInterval(() => {
+          const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#F8E1E9'];
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          currentBackground = { type: 'color', value: randomColor };
+          setState({ background: currentBackground });
+          preview.style.backgroundColor = randomColor;
+          preview.style.animation = 'none';
+          preview.classList.remove('animated-bg');
+        }, 1000);
+      } else {
+        stopRandomColors();
+        setColor('#F8E1E9'); // Reset to default color
+      }
+    }
+
+    function stopRandomColors() {
+      randomColorsActive = false;
+      if (randomColorInterval) {
+        clearInterval(randomColorInterval);
+        randomColorInterval = null;
+      }
     }
 
     function updateTextPreview() {
@@ -214,8 +301,32 @@
       const color1 = document.getElementById('bg-color1').value;
       const color2 = document.getElementById('bg-color2').value;
       const color3 = document.getElementById('bg-color3').value;
-      setAnimatedBackground([color1, color2, color3]);
+      const duration = document.getElementById('bg-speed').value;
+      setAnimatedBackground([color1, color2, color3], duration);
     });
+
+    document.getElementById('bg-speed').addEventListener('input', (e) => {
+      document.getElementById('bg-speed-value').textContent = `${e.target.value}s`;
+      const preview = document.getElementById('text-preview');
+      if (preview.classList.contains('animated-bg')) {
+        const color1 = document.getElementById('bg-color1').value;
+        const color2 = document.getElementById('bg-color2').value;
+        const color3 = document.getElementById('bg-color3').value;
+        setAnimatedBackground([color1, color2, color3], e.target.value);
+      }
+    });
+
+    document.getElementById('strobe-btn').addEventListener('click', toggleStrobe);
+
+    document.getElementById('strobe-speed').addEventListener('input', (e) => {
+      document.getElementById('strobe-speed-value').textContent = `${e.target.value}ms`;
+      if (strobeActive) {
+        stopStrobe();
+        toggleStrobe(); // Restart strobe with new speed
+      }
+    });
+
+    document.getElementById('random-colors-btn').addEventListener('click', toggleRandomColors);
 
     document.getElementById('text-btn').addEventListener('click', () => {
       const text = document.getElementById('custom-text').value;
