@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OrionQR - Control Totem LED</title>
+  <title>Control Totem LED</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,6 +20,7 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.2);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: none; /* Hidden by default */
     }
     .text-preview {
       width: 344px;
@@ -125,7 +126,7 @@
       transition: max-height 0.3s ease;
     }
     .accordion-content.open {
-      max-height: 1200px; /* Increased to accommodate larger preview */
+      max-height: 1200px;
     }
     .tooltip {
       position: relative;
@@ -182,6 +183,9 @@
           <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="w-full p-2 border rounded bg-gray-800 text-white border-gray-600">
           <button id="upload-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Subir archivo">
             <i class="fas fa-upload mr-2"></i>Subir y Mostrar
+          </button>
+          <button id="media-toggle-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Mostrar/Ocultar en totem">
+            <i class="fas fa-eye mr-2"></i>Mostrar
           </button>
         </div>
       </div>
@@ -267,8 +271,11 @@
             <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
             <span id="position-value" class="text-sm text-gray-400">50%</span>
           </div>
-          <button id="text-btn" class="w-full btn-primary tooltip mb-4" data-tooltip="Aplicar texto">
+          <button id="text-btn" class="w-full btn-primary tooltip mb-2" data-tooltip="Aplicar texto">
             <i class="fas fa-text-height mr-2"></i>Aplicar Texto
+          </button>
+          <button id="text-toggle-btn" class="w-full btn-primary tooltip mb-4" data-tooltip="Mostrar/Ocultar en totem">
+            <i class="fas fa-eye mr-2"></i>Mostrar
           </button>
           <div class="text-preview" id="text-preview">
             <div class="preview-text" id="preview-text">Texto de ejemplo</div>
@@ -285,10 +292,12 @@
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
 
-    // Track the current background state
+    // Track the current state
     let currentBackground = { type: 'color', value: '#F8E1E9' };
     let randomColorsActive = false;
     let randomColorInterval = null;
+    let mediaVisible = true;
+    let textVisible = true;
 
     async function setState({ text, background, media }) {
       try {
@@ -320,7 +329,11 @@
         const { path } = await response.json();
         const fullMediaUrl = path;
 
-        await setState({ media: fullMediaUrl, text: null, background: currentBackground });
+        await setState({ 
+          media: { url: fullMediaUrl, visible: mediaVisible }, 
+          text: null, 
+          background: currentBackground 
+        });
         fileInput.value = '';
       } catch (error) {
         alert('Error: ' + error.message);
@@ -391,6 +404,39 @@
       previewText.style.color = color;
       previewText.style.top = `${position}%`;
       previewText.style.transform = 'translateY(-50%)';
+      previewText.style.display = textVisible ? 'block' : 'none';
+    }
+
+    function toggleMediaVisibility() {
+      mediaVisible = !mediaVisible;
+      const btn = document.getElementById('media-toggle-btn');
+      btn.innerHTML = `<i class="fas ${mediaVisible ? 'fa-eye' : 'fa-eye-slash'} mr-2"></i>${mediaVisible ? 'Mostrar' : 'Ocultar'}`;
+      setState({ 
+        media: { url: null, visible: mediaVisible }, 
+        text: null, 
+        background: currentBackground 
+      });
+    }
+
+    function toggleTextVisibility() {
+      textVisible = !textVisible;
+      const btn = document.getElementById('text-toggle-btn');
+      btn.innerHTML = `<i class="fas ${textVisible ? 'fa-eye' : 'fa-eye-slash'} mr-2"></i>${textVisible ? 'Mostrar' : 'Ocultar'}`;
+      const text = document.getElementById('custom-text').value;
+      const font = document.getElementById('text-font').value;
+      const size = document.getElementById('text-size').value;
+      const color = document.getElementById('text-color').value;
+      const position = document.getElementById('text-position').value;
+      const textConfig = text ? { 
+        text, 
+        font, 
+        size: parseInt(size), 
+        color, 
+        position: parseInt(position), 
+        visible: textVisible 
+      } : null;
+      setState({ text: textConfig, background: currentBackground, media: null });
+      updateTextPreview();
     }
 
     function resetSettings() {
@@ -405,6 +451,10 @@
       document.getElementById('bg-color2').value = '#D4A017';
       document.getElementById('bg-color3').value = '#FFFFFF';
       document.getElementById('bg-speed').value = '15';
+      mediaVisible = true;
+      textVisible = true;
+      document.getElementById('media-toggle-btn').innerHTML = '<i class="fas fa-eye mr-2"></i>Mostrar';
+      document.getElementById('text-toggle-btn').innerHTML = '<i class="fas fa-eye mr-2"></i>Mostrar';
       updateTextPreview();
       document.getElementById('bg-speed-value').textContent = '15s';
       document.getElementById('position-value').textContent = '50%';
@@ -476,10 +526,13 @@
     document.getElementById('admin-password').addEventListener('input', (e) => {
       if (e.target.value === 'admin123') {
         document.getElementById('admin-panel').style.display = 'block';
+      } else {
+        document.getElementById('admin-panel').style.display = 'none';
       }
     });
 
     document.getElementById('upload-btn').addEventListener('click', uploadMedia);
+    document.getElementById('media-toggle-btn').addEventListener('click', toggleMediaVisibility);
     document.getElementById('custom-color-btn').addEventListener('click', () => {
       const color = document.getElementById('custom-color').value;
       setColor(color);
@@ -516,10 +569,18 @@
         alert('Por favor, ingresa un texto');
         return;
       }
-      const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
+      const textConfig = { 
+        text, 
+        font, 
+        size: parseInt(size), 
+        color, 
+        position: parseInt(position), 
+        visible: textVisible 
+      };
       setState({ text: textConfig, background: currentBackground, media: null });
     });
 
+    document.getElementById('text-toggle-btn').addEventListener('click', toggleTextVisibility);
     document.getElementById('custom-text').addEventListener('input', updateTextPreview);
     document.getElementById('text-font').addEventListener('change', updateTextPreview);
     document.getElementById('text-size').addEventListener('change', updateTextPreview);
