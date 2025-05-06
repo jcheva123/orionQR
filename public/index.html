@@ -22,12 +22,12 @@
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     }
     .text-preview {
-      width: 256px;
-      height: 704px;
+      width: 344px;
+      height: 774px;
       background-color: #F8E1E9;
       position: relative;
       overflow: hidden;
-      margin-bottom: 1rem;
+      margin: 1rem auto;
       border: 2px solid rgba(255, 255, 255, 0.2);
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -125,7 +125,7 @@
       transition: max-height 0.3s ease;
     }
     .accordion-content.open {
-      max-height: 1000px;
+      max-height: 1200px;
     }
     .tooltip {
       position: relative;
@@ -267,12 +267,12 @@
             <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
             <span id="position-value" class="text-sm text-gray-400">50%</span>
           </div>
+          <button id="text-btn" class="w-full btn-primary tooltip mb-4" data-tooltip="Aplicar texto">
+            <i class="fas fa-text-height mr-2"></i>Aplicar Texto
+          </button>
           <div class="text-preview" id="text-preview">
             <div class="preview-text" id="preview-text">Texto de ejemplo</div>
           </div>
-          <button id="text-btn" class="w-full btn-primary tooltip" data-tooltip="Aplicar texto">
-            <i class="fas fa-text-height mr-2"></i>Aplicar Texto
-          </button>
         </div>
       </div>
 
@@ -320,10 +320,7 @@
         const { path } = await response.json();
         const fullMediaUrl = path;
 
-        await setState({ media: fullMediaUrl, text: null, background: currentBackground });
-        fileInput.value = '';
-      } catch (error) {
-        alert('Error: ' + error.message);
+        await setState({ media: fullMediaUrl, text: null, background: current 오류: ' + error.message);
       }
     }
 
