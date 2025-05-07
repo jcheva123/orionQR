@@ -393,8 +393,9 @@
 
     function setAnimatedBackground(colors, duration) {
       stopRandomColors();
-      currentBackground = { type: 'animatedBackground', value: colors, duration: parseInt(duration) };
-      console.log('Applying animated background:', { colors, duration }); // Debug
+      const durationSeconds = parseFloat(duration); // Ensure number
+      currentBackground = { type: 'animatedBackground', value: colors, duration: durationSeconds };
+      console.log('Applying animated background:', { colors, duration: durationSeconds }); // Debug
       setState({ background: currentBackground });
       const preview = document.getElementById('text-preview');
       // Clear previous styles
@@ -404,9 +405,8 @@
       preview.style.setProperty('--color1', colors[0]);
       preview.style.setProperty('--color2', colors[1]);
       preview.style.setProperty('--color3', colors[2] || colors[0]);
-      preview.style.setProperty('--animation-duration', `${duration}s`);
-      // Force animation reapply
-      void preview.offsetWidth; // Trigger reflow
+      preview.style.setProperty('--animation-duration', `${durationSeconds}s`);
+      // Apply animation
       preview.classList.add('animated-bg');
       console.log('Animation applied to preview:', {
         color1: preview.style.getPropertyValue('--color1'),
@@ -415,7 +415,7 @@
         duration: preview.style.getPropertyValue('--animation-duration'),
         hasAnimatedBg: preview.classList.contains('animated-bg')
       }); // Debug
-      alert('Fondo animado aplicado con éxito'); // User feedback
+      alert('Fondo animado aplicado con duración de ' + durationSeconds + 's'); // User feedback
     }
 
     function toggleRandomColors() {
@@ -577,9 +577,9 @@
       const duration = e.target.value;
       document.getElementById('bg-speed-value').textContent = `${duration}s`;
       const preview = document.getElementById('text-preview');
-      if (preview.classList.contains('animated-bg')) {
-        preview.style.setProperty('--animation-duration', `${duration}s`);
-        currentBackground.duration = parseInt(duration);
+      preview.style.setProperty('--animation-duration', `${duration}s`);
+      if (currentBackground.type === 'animatedBackground') {
+        currentBackground.duration = parseFloat(duration);
         setState({ background: currentBackground });
         console.log('Updated animation duration:', duration); // Debug
       }
