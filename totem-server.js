@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 60 * 1024 * 1024 }, // 60MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime'];
     if (allowedTypes.includes(file.mimetype)) {
@@ -72,7 +72,7 @@ app.post('/upload', upload.single('media'), (req, res) => {
       return res.status(400).json({ error: 'No se seleccionó ningún archivo' });
     }
     const filePath = `/uploads/${req.file.filename}`;
-    console.log('File uploaded:', { filename: req.file.filename, path: filePath });
+    console.log('File uploaded:', { filename: req.file.filename, path: filePath, size: req.file.size });
     res.json({ path: filePath });
   } catch (error) {
     console.error('Upload error:', error.message);
