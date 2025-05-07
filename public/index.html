@@ -33,22 +33,12 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    .preview-media {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 5; /* Below text */
-    }
     .preview-text {
       position: absolute;
       width: 100%;
       text-align: center;
       white-space: pre-wrap;
       animation: subtleAnimation 30s infinite;
-      z-index: 10; /* Above media */
     }
     @keyframes subtleAnimation {
       0% { opacity: 0; transform: translateY(20px); }
@@ -194,19 +184,6 @@
           <button id="upload-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Subir archivo">
             <i class="fas fa-upload mr-2"></i>Subir y Mostrar
           </button>
-          <div class="mb-2 mt-2">
-            <label class="block mb-1">Escala de Foto/Video:</label>
-            <input id="media-scale" type="range" min="0.5" max="2" step="0.1" value="1" class="w-full">
-            <span id="media-scale-value" class="text-sm text-gray-400">1.0x</span>
-          </div>
-          <div class="mb-2">
-            <label class="block mb-1">Posición Vertical:</label>
-            <input id="media-position" type="range" min="0" max="100" value="50" class="w-full">
-            <span id="media-position-value" class="text-sm text-gray-400">50%</span>
-          </div>
-          <button id="apply-media-adjustments-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Aplicar ajustes de escala y posición">
-            <i class="fas fa-check mr-2"></i>Aplicar Ajustes
-          </button>
         </div>
       </div>
       
@@ -295,8 +272,6 @@
             <i class="fas fa-text-height mr-2"></i>Aplicar Texto
           </button>
           <div class="text-preview" id="text-preview">
-            <img id="preview-media" class="preview-media" style="display: none;">
-            <video id="preview-video" class="preview-media" style="display: none;" loop muted></video>
             <div class="preview-text" id="preview-text">Texto de ejemplo</div>
           </div>
         </div>
@@ -311,11 +286,10 @@
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
 
-    // Track the current state
+    // Track the current background state
     let currentBackground = { type: 'color', value: '#F8E1E9' };
     let randomColorsActive = false;
     let randomColorInterval = null;
-    let currentMediaUrl = null;
 
     async function setState({ text, background, media }) {
       try {
@@ -326,7 +300,7 @@
         });
         if (!response.ok) throw new Error('Error al actualizar contenido');
       } catch (error) {
-        alert('Error al enviar al servidor: ' + error.message);
+        alert('Error: ' + error.message);
       }
     }
 
@@ -345,71 +319,13 @@
         });
         if (!response.ok) throw new Error('Error al subir archivo');
         const { path } = await response.json();
-        console.log('Backend response path:', path); // Debug
-        currentMediaUrl = path.startsWith('http') ? path : `${backendUrl}${path}`; // Handle absolute or relative paths
-        console.log('Constructed media URL:', currentMediaUrl); // Debug
-        const scale = document.getElementById('media-scale').value;
-        const position = document.getElementById('media-position').value;
-        await setState({ 
-          media: { url: currentMediaUrl, scale: parseFloat(scale), position: parseInt(position) }, 
-          text: null, 
-          background: currentBackground 
-        });
-        updateMediaPreview();
+        const fullMediaUrl = path;
+
+        await setState({ media: fullMediaUrl, text: null, background: currentBackground });
         fileInput.value = '';
       } catch (error) {
-        alert('Error al subir el archivo: ' + error.message);
+        alert('Error: ' + error.message);
       }
-    }
-
-    function updateMediaPreview() {
-      const scale = document.getElementById('media-scale').value;
-      const position = document.getElementById('media-position').value;
-      const previewMedia = document.getElementById('preview-media');
-      const previewVideo = document.getElementById('preview-video');
-      
-      document.getElementById('media-scale-value').textContent = `${parseFloat(scale).toFixed(1)}x`;
-      document.getElementById('media-position-value').textContent = `${position}%`;
-      
-      if (currentMediaUrl) {
-        const isVideo = currentMediaUrl.endsWith('.mp4') || currentMediaUrl.endsWith('.mov');
-        previewMedia.style.display = isVideo ? 'none' : 'block';
-        previewVideo.style.display = isVideo ? 'block' : 'none';
-        
-        const mediaElement = isVideo ? previewVideo : previewMedia;
-        mediaElement.src = currentMediaUrl;
-        mediaElement.style.transform = `translateY(-50%) scale(${scale})`;
-        mediaElement.style.top = `${position}%`;
-        
-        // Error handling for media loading
-        mediaElement.onerror = () => {
-          alert('Error: No se pudo cargar el archivo multimedia. Verifica la URL o el formato.');
-          console.error('Media load error:', currentMediaUrl);
-        };
-        
-        if (isVideo) {
-          previewVideo.play().catch((err) => {
-            console.log('Video play failed:', err);
-          });
-        }
-      } else {
-        previewMedia.style.display = 'none';
-        previewVideo.style.display = 'none';
-      }
-    }
-
-    function applyMediaAdjustments() {
-      if (!currentMediaUrl) {
-        alert('Por favor, sube un archivo primero');
-        return;
-      }
-      const scale = document.getElementById('media-scale').value;
-      const position = document.getElementById('media-position').value;
-      setState({ 
-        media: { url: currentMediaUrl, scale: parseFloat(scale), position: parseInt(position) }, 
-        text: null, 
-        background: currentBackground 
-      });
     }
 
     function setColor(color) {
@@ -490,14 +406,7 @@
       document.getElementById('bg-color2').value = '#D4A017';
       document.getElementById('bg-color3').value = '#FFFFFF';
       document.getElementById('bg-speed').value = '15';
-      document.getElementById('media-scale').value = '1';
-      document.getElementById('media-position').value = '50';
-      document.getElementById('media-scale-value').textContent = '1.0x';
-      document.getElementById('media-position-value').textContent = '50%';
-      currentMediaUrl = null;
-      setState({ media: null, text: null, background: currentBackground });
       updateTextPreview();
-      updateMediaPreview();
       document.getElementById('bg-speed-value').textContent = '15s';
       document.getElementById('position-value').textContent = '50%';
     }
@@ -574,7 +483,6 @@
     });
 
     document.getElementById('upload-btn').addEventListener('click', uploadMedia);
-    document.getElementById('apply-media-adjustments-btn').addEventListener('click', applyMediaAdjustments);
     document.getElementById('custom-color-btn').addEventListener('click', () => {
       stopRandomColors();
       const color = document.getElementById('custom-color').value;
@@ -601,14 +509,6 @@
       }
     });
 
-    document.getElementById('media-scale').addEventListener('input', (e) => {
-      updateMediaPreview();
-    });
-
-    document.getElementById('media-position').addEventListener('input', (e) => {
-      updateMediaPreview();
-    });
-
     document.getElementById('random-colors-btn').addEventListener('click', toggleRandomColors);
 
     document.getElementById('text-btn').addEventListener('click', () => {
@@ -623,8 +523,6 @@
       }
       const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
       setState({ text: textConfig, background: currentBackground, media: null });
-      currentMediaUrl = null;
-      updateMediaPreview();
     });
 
     document.getElementById('custom-text').addEventListener('input', updateTextPreview);
@@ -639,7 +537,6 @@
     document.getElementById('reset-btn').addEventListener('click', resetSettings);
 
     updateTextPreview();
-    updateMediaPreview();
   </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93893b37c8b5c000',t:'MTc0NjAzOTA5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
