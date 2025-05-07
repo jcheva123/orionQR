@@ -338,9 +338,9 @@
       }
 
       // Client-side validation
-      const maxSize = 10 * 1024 * 1024; // 10MB
+      const maxSize = 60 * 1024 * 1024; // 60MB
       if (file.size > maxSize) {
-        alert('El archivo es demasiado grande. Usa un archivo menor a 10MB.');
+        alert('El archivo es demasiado grande. Usa un archivo menor a 60MB.');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime'];
