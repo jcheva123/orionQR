@@ -1,99 +1,85 @@
 const express = require('express');
 const multer = require('multer');
-const cors = require('cors');
 const path = require('path');
-const fs = require('fs').promises;
-const cloudinary = require('cloudinary').v2;
+const cors = require('cors');
 
 const app = express();
+const port = process.env.PORT || 3000;
+
+// Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configuración de Multer para manejo temporal de archivos
+// Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'temp'),
-  filename: (req, file, cb) => cb(null, file.originalname)
-});
-
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime'];
-    if (allowedTypes.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('Formato no permitido. Usa JPEG, PNG, MP4 o MOV.'));
+  destination: (req, res, cb) => {
+    cb(null, 'uploads/');
   },
-  limits: { fileSize: 100 * 1024 * 1024 }
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
 });
+const upload = multer({ storage });
 
-// Crear carpeta temporal
-const uploadsDir = path.join(__dirname, 'temp');
-fs.mkdir(uploadsDir, { recursive: true });
-
-// Configurar Cloudinary desde variable de entorno
-cloudinary.config({
-  cloud_name: 'ddhie4lad',
-  api_key: '493144731521638',
-  api_secret: 'BaXbAjm8dhSafVKBGY5g5liGjAo'
-});
-
-// Estado inicial
-let state = {
-  text: null,
-  background: { type: 'color', value: '#F8E1E9' },
-  media: null
+// In-memory state for each totem
+const totemStates = {
+  totem1: { text: null, background: { type: 'color', value: '#F8E1E9' }, media: null },
+  totem2: { text: null, background: { type: 'color', value: '#F8E1E9' }, media: null },
+  totem3: { text: null, background: { type: 'color', value: '#F8E1E9' }, media: null }
 };
-const stateFile = path.join(__dirname, 'state.json');
 
-async function loadState() {
+// Upload endpoint
+app.post('/upload', upload.single('media'), (req, res) => {
   try {
-    const data = await fs.readFile(stateFile, 'utf8');
-    state = JSON.parse(data);
+    const totemId = req.body.totemId;
+    if (!['totem1', 'totem2', 'totem3'].includes(totemId)) {
+      return res.status(400).json({ error: 'Invalid totemId' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const filePath = `/uploads/${req.file.filename}`;
+    res.json({ path: filePath });
   } catch (error) {
-    // No se pudo cargar estado anterior
-  }
-}
-
-async function saveState() {
-  await fs.writeFile(stateFile, JSON.stringify(state));
-}
-
-loadState();
-
-// Subida de archivos a Cloudinary
-app.post('/upload', upload.single('media'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo' });
-  try {
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'orionQR',
-      resource_type: 'auto'
-    });
-
-    state.media = result.secure_url;
-    state.text = null;
-    await saveState();
-    await fs.unlink(req.file.path);
-    res.json({ path: result.secure_url });
-  } catch (error) {
-    console.error('Error subiendo a Cloudinary:', error);
-    res.status(500).json({ error: 'Error al subir a Cloudinary: ' + error.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Estado actual
-app.get('/state', (req, res) => {
-  res.json(state);
-});
-
+// State update endpoint
 app.post('/state', (req, res) => {
-  const { text, background, media } = req.body;
-  if (text !== undefined) state.text = text;
-  if (background !== undefined) state.background = background;
-  if (media !== undefined) state.media = media;
-  saveState();
-  res.json(state);
+  try {
+    const { totemId, text, background, media } = req.body;
+    if (!['totem1', 'totem2', 'totem3'].includes(totemId)) {
+      return res.status(400).json({ error: 'Invalid totemId' });
+    }
+    totemStates[totemId] = { text, background, media };
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// State retrieval endpoint for display
+app.get('/state/:totemId', (req, res) => {
+  const totemId = req.params.totemId;
+  if (!['totem1', 'totem2', 'totem3'].includes(totemId)) {
+    return res.status(400).json({ error: 'Invalid totemId' });
+  }
+  res.json(totemStates[totemId]);
+});
+
+// Serve control and display pages
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/display/:totemId', (req, res) => {
+  res.sendFile(path.join(__dirname, 'display.html'));
+});
+
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
