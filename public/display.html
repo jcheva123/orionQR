@@ -22,7 +22,7 @@
       position: relative;
       overflow: hidden;
       border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 12px;
+      border-radius: 0; /* Sharp edges */
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     .display-text {
@@ -59,9 +59,9 @@
 
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
-    // Get totemId from URL query or set default
     const urlParams = new URLSearchParams(window.location.search);
-    const totemId = urlParams.get('totemId') || 'totem1'; // Default to totem1 if not specified
+    const totemId = urlParams.get('totemId') || 'totem1';
+    let currentMediaUrl = null;
 
     async function fetchState() {
       try {
@@ -70,7 +70,7 @@
         const state = await response.json();
         updateDisplay(state);
       } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error fetching state:', error.message);
       }
     }
 
@@ -80,17 +80,12 @@
       const mediaElement = document.getElementById('display-media');
       const videoElement = document.getElementById('display-video');
 
-      // Reset styles
-      container.style.animation = 'none';
-      container.classList.remove('animated-bg');
-      mediaElement.style.display = 'none';
-      videoElement.style.display = 'none';
-      textElement.textContent = '';
-
       // Apply background
       if (state.background) {
         if (state.background.type === 'color') {
           container.style.backgroundColor = state.background.value;
+          container.style.animation = 'none';
+          container.classList.remove('animated-bg');
         } else if (state.background.type === 'animatedBackground') {
           container.style.setProperty('--color1', state.background.value[0]);
           container.style.setProperty('--color2', state.background.value[1]);
@@ -108,17 +103,32 @@
         textElement.style.color = state.text.color;
         textElement.style.top = `${state.text.position}%`;
         textElement.style.transform = 'translateY(-50%)';
+      } else {
+        textElement.textContent = '';
       }
 
       // Apply media
-      if (state.media) {
+      if (state.media && state.media !== currentMediaUrl) {
         const isVideo = state.media.endsWith('.mp4') || state.media.endsWith('.mov');
         const targetElement = isVideo ? videoElement : mediaElement;
+        mediaElement.style.display = isVideo ? 'none' : 'block';
+        videoElement.style.display = isVideo ? 'block' : 'none';
         targetElement.src = state.media;
-        targetElement.style.display = 'block';
+        currentMediaUrl = state.media;
+
+        targetElement.onerror = () => {
+          console.error('Media load error:', state.media);
+        };
+
         if (isVideo) {
-          videoElement.play().catch(err => console.error('Video play error:', err));
+          videoElement.play().catch(err => {
+            console.error('Video play error:', err);
+          });
         }
+      } else if (!state.media) {
+        mediaElement.style.display = 'none';
+        videoElement.style.display = 'none';
+        currentMediaUrl = null;
       }
     }
 
