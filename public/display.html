@@ -4,36 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OrionQR - Totem Display</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
   <style>
     body {
+      background: #1e1e2f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background-color: #F8E1E9;
-      width: 344px;
-      height: 774px;
     }
-    #content {
+    .display-container {
       width: 344px;
       height: 774px;
+      background-color: #F8E1E9;
       position: relative;
       overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    #text-content {
+    .display-text {
       position: absolute;
       width: 100%;
       text-align: center;
       white-space: pre-wrap;
-      animation: subtleAnimation 30s infinite;
-      z-index: 1;
+      z-index: 10;
     }
-    @keyframes subtleAnimation {
-      0% { opacity: 0; transform: translateY(20px); }
-      5% { opacity: 1; transform: translateY(0); }
-      90% { opacity: 1; transform: translateY(0); }
-      95% { opacity: 0.8; transform: translateY(-10px); }
-      100% { opacity: 0; transform: translateY(20px); }
+    .display-media {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      z-index: 5;
     }
     @keyframes backgroundAnimation {
       0% { background-color: var(--color1); }
@@ -41,187 +45,84 @@
       66% { background-color: var(--color3, var(--color1)); }
       100% { background-color: var(--color1); }
     }
-    #media-content, #media-content-video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 0;
+    .animated-bg {
+      animation: backgroundAnimation var(--animation-duration, 15s) infinite;
     }
   </style>
 </head>
 <body>
-  <div id="content">
-    <div id="text-content"></div>
-    <img id="media-content" alt="Media">
-    <video id="media-content-video" autoplay muted playsinline>
-      <source id="video-source">
-    </video>
+  <div class="display-container" id="display-container">
+    <img id="display-media" class="display-media" style="display: none;">
+    <video id="display-video" class="display-media" style="display: none;" loop muted></video>
+    <div class="display-text" id="display-text"></div>
   </div>
 
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
-    let currentMediaUrl = null; // Track the currently playing media URL
+    // Get totemId from URL query or set default
+    const urlParams = new URLSearchParams(window.location.search);
+    const totemId = urlParams.get('totemId') || 'totem1'; // Default to totem1 if not specified
 
     async function fetchState() {
       try {
-        const response = await fetch(`${backendUrl}/state`);
-        if (!response.ok) throw new Error('Error al obtener el estado');
+        const response = await fetch(`${backendUrl}/state/${totemId}`);
+        if (!response.ok) throw new Error('Error al obtener estado');
         const state = await response.json();
         updateDisplay(state);
       } catch (error) {
-        console.error('Error fetching state:', error.message);
+        console.error('Error:', error.message);
       }
     }
 
     function updateDisplay(state) {
-      const textContent = document.getElementById('text-content');
-      const mediaContent = document.getElementById('media-content');
-      const mediaContentVideo = document.getElementById('media-content-video');
-      const videoSource = document.getElementById('video-source');
+      const container = document.getElementById('display-container');
+      const textElement = document.getElementById('display-text');
+      const mediaElement = document.getElementById('display-media');
+      const videoElement = document.getElementById('display-video');
 
-      // Apply background (always safe to update)
+      // Reset styles
+      container.style.animation = 'none';
+      container.classList.remove('animated-bg');
+      mediaElement.style.display = 'none';
+      videoElement.style.display = 'none';
+      textElement.textContent = '';
+
+      // Apply background
       if (state.background) {
         if (state.background.type === 'color') {
-          document.body.style.backgroundColor = state.background.value;
-          document.body.style.animation = 'none';
+          container.style.backgroundColor = state.background.value;
         } else if (state.background.type === 'animatedBackground') {
-          const colors = state.background.value;
-          document.body.style.setProperty('--color1', colors[0]);
-          document.body.style.setProperty('--color2', colors[1]);
-          document.body.style.setProperty('--color3', colors[2] || colors[0]);
-          document.body.style.animation = 'backgroundAnimation 15s infinite';
+          container.style.setProperty('--color1', state.background.value[0]);
+          container.style.setProperty('--color2', state.background.value[1]);
+          container.style.setProperty('--color3', state.background.value[2] || state.background.value[0]);
+          container.style.setProperty('--animation-duration', `${state.background.duration}s`);
+          container.classList.add('animated-bg');
         }
-      } else {
-        document.body.style.backgroundColor = '#F8E1E9';
-        document.body.style.animation = 'none';
       }
 
-      // Handle media or text
+      // Apply text
+      if (state.text) {
+        textElement.textContent = state.text.text;
+        textElement.style.fontFamily = `'${state.text.font}', serif`;
+        textElement.style.fontSize = `${state.text.size}px`;
+        textElement.style.color = state.text.color;
+        textElement.style.top = `${state.text.position}%`;
+        textElement.style.transform = 'translateY(-50%)';
+      }
+
+      // Apply media
       if (state.media) {
-        console.log('Media URL:', state.media);
-
-        // Check if the media URL has changed
-        if (state.media !== currentMediaUrl) {
-          // Reset display only if media has changed
-          textContent.style.display = 'none';
-          mediaContent.style.display = 'none';
-          mediaContentVideo.style.display = 'none';
-          mediaContentVideo.pause();
-
-          if (state.media.endsWith('.mp4') || state.media.endsWith('.mov')) {
-            videoSource.src = state.media;
-            videoSource.type = state.media.endsWith('.mp4') ? 'video/mp4' : 'video/quicktime';
-            mediaContentVideo.load();
-            mediaContentVideo.style.display = 'block';
-            currentMediaUrl = state.media;
-
-            // Ensure video plays without interruption
-            mediaContentVideo.play().catch(error => {
-              console.error('Video playback error:', error.message);
-              if (!mediaContentVideo.paused) {
-                setTimeout(() => {
-                  if (currentMediaUrl === state.media) {
-                    mediaContentVideo.play().catch(err => console.error('Retry play error:', err.message));
-                  }
-                }, 1000);
-              }
-            });
-
-            // Fallback loop mechanism: Check if video is near the end
-            mediaContentVideo.addEventListener('loadedmetadata', () => {
-              const duration = mediaContentVideo.duration;
-              if (duration) {
-                setInterval(() => {
-                  if (currentMediaUrl === state.media && mediaContentVideo.currentTime >= duration - 0.1) {
-                    console.log('Fallback: Video near end, forcing loop...');
-                    mediaContentVideo.currentTime = 0;
-                    mediaContentVideo.play().catch(err => console.error('Fallback replay error:', err.message));
-                  }
-                }, 100);
-              }
-            }, { once: true });
-          } else {
-            mediaContent.src = state.media;
-            mediaContent.style.display = 'block';
-            currentMediaUrl = state.media;
-          }
+        const isVideo = state.media.endsWith('.mp4') || state.media.endsWith('.mov');
+        const targetElement = isVideo ? videoElement : mediaElement;
+        targetElement.src = state.media;
+        targetElement.style.display = 'block';
+        if (isVideo) {
+          videoElement.play().catch(err => console.error('Video play error:', err));
         }
-      } else if (state.text) {
-        // Reset display for text
-        textContent.style.display = 'none';
-        mediaContent.style.display = 'none';
-        mediaContentVideo.style.display = 'none';
-        mediaContentVideo.pause();
-        currentMediaUrl = null;
-
-        const { text, font, size, color, position } = state.text;
-        textContent.textContent = text;
-        textContent.style.fontFamily = `'${font}', serif`;
-        textContent.style.fontSize = `${size}px`;
-        textContent.style.color = color;
-        textContent.style.top = `${position}%`;
-        textContent.style.transform = 'translateY(-50%)';
-        textContent.style.display = 'block';
-      } else {
-        // Reset display if no media or text
-        textContent.style.display = 'none';
-        mediaContent.style.display = 'none';
-        mediaContentVideo.style.display = 'none';
-        mediaContentVideo.pause();
-        currentMediaUrl = null;
       }
     }
 
-    // Manual video looping
-    const mediaContentVideo = document.getElementById('media-content-video');
-    mediaContentVideo.addEventListener('ended', () => {
-      console.log('Video ended event triggered, replaying...');
-      if (currentMediaUrl && mediaContentVideo.src.includes(currentMediaUrl)) {
-        mediaContentVideo.currentTime = 0;
-        mediaContentVideo.play().catch(error => {
-          console.error('Video replay error:', error.message);
-          if (!mediaContentVideo.paused) {
-            setTimeout(() => {
-              if (currentMediaUrl && mediaContentVideo.src.includes(currentMediaUrl)) {
-                mediaContentVideo.play().catch(err => console.error('Retry replay error:', err.message));
-              }
-            }, 1000);
-          }
-        });
-      }
-    });
-
-    // Error handling for video
-    mediaContentVideo.addEventListener('error', (e) => {
-      console.error('Video error:', e);
-      if (currentMediaUrl && mediaContentVideo.src.includes(currentMediaUrl)) {
-        mediaContentVideo.load();
-        mediaContentVideo.play().catch(error => {
-          console.error('Video reload error:', error.message);
-          if (!mediaContentVideo.paused) {
-            setTimeout(() => {
-              if (currentMediaUrl && mediaContentVideo.src.includes(currentMediaUrl)) {
-                mediaContentVideo.play().catch(err => console.error('Retry reload error:', err.message));
-              }
-            }, 1000);
-          }
-        });
-      }
-    });
-
-    // Debug video state
-    mediaContentVideo.addEventListener('pause', () => {
-      console.log('Video paused, currentTime:', mediaContentVideo.currentTime);
-    });
-    mediaContentVideo.addEventListener('play', () => {
-      console.log('Video playing, currentTime:', mediaContentVideo.currentTime);
-    });
-
-    // Fetch state every 2 seconds
+    // Poll for state updates every 2 seconds
     fetchState();
     setInterval(fetchState, 2000);
   </script>
