@@ -169,6 +169,11 @@
         <i class="fas fa-moon"></i>
       </button>
     </div>
+    <select id="totem-select" class="w-full max-w-md p-2 mb-4 border rounded bg-gray-800 text-white border-gray-600 focus:ring-2 focus:ring-[#D4A017]">
+      <option value="totem1">Totem 1</option>
+      <option value="totem2">Totem 2</option>
+      <option value="totem3">Totem 3</option>
+    </select>
     <input id="admin-password" type="password" placeholder="Contraseña" class="w-full max-w-md p-2 mb-4 border rounded bg-gray-800 text-white border-gray-600 focus:ring-2 focus:ring-[#D4A017]">
     
     <div id="admin-panel" class="w-full max-w-md p-6 rounded-lg">
@@ -286,17 +291,18 @@
   <script>
     const backendUrl = 'https://orionqr.onrender.com';
 
-    // Track the current background state
+    // Track the current state
     let currentBackground = { type: 'color', value: '#F8E1E9' };
     let randomColorsActive = false;
     let randomColorInterval = null;
 
     async function setState({ text, background, media }) {
+      const totemId = document.getElementById('totem-select').value;
       try {
         const response = await fetch(`${backendUrl}/state`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, background, media })
+          body: JSON.stringify({ totemId, text, background, media })
         });
         if (!response.ok) throw new Error('Error al actualizar contenido');
       } catch (error) {
@@ -306,12 +312,14 @@
 
     async function uploadMedia() {
       const fileInput = document.getElementById('media-upload');
+      const totemId = document.getElementById('totem-select').value;
       if (!fileInput.files[0]) {
         alert('Selecciona un archivo');
         return;
       }
       const formData = new FormData();
       formData.append('media', fileInput.files[0]);
+      formData.append('totemId', totemId);
       try {
         const response = await fetch(`${backendUrl}/upload`, {
           method: 'POST',
@@ -319,8 +327,7 @@
         });
         if (!response.ok) throw new Error('Error al subir archivo');
         const { path } = await response.json();
-        const fullMediaUrl = path;
-
+        const fullMediaUrl = path.startsWith('http') ? path : `${backendUrl}${path}`;
         await setState({ media: fullMediaUrl, text: null, background: currentBackground });
         fileInput.value = '';
       } catch (error) {
@@ -409,6 +416,7 @@
       updateTextPreview();
       document.getElementById('bg-speed-value').textContent = '15s';
       document.getElementById('position-value').textContent = '50%';
+      setState({ text: null, background: currentBackground, media: null });
     }
 
     // Accordion functionality
@@ -539,5 +547,6 @@
     updateTextPreview();
   </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93893b37c8b5c000',t:'MTc0NjAzOTA5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c0fca78a136772',t:'MTc0NjYyMzczNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
