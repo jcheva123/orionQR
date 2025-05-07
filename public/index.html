@@ -40,6 +40,7 @@
       object-fit: contain;
       top: 50%;
       transform: translateY(-50%);
+      z-index: 5; /* Below text */
     }
     .preview-text {
       position: absolute;
@@ -47,7 +48,7 @@
       text-align: center;
       white-space: pre-wrap;
       animation: subtleAnimation 30s infinite;
-      z-index: 10; /* Ensure text is above media */
+      z-index: 10; /* Above media */
     }
     @keyframes subtleAnimation {
       0% { opacity: 0; transform: translateY(20px); }
@@ -203,6 +204,9 @@
             <input id="media-position" type="range" min="0" max="100" value="50" class="w-full">
             <span id="media-position-value" class="text-sm text-gray-400">50%</span>
           </div>
+          <button id="apply-media-adjustments-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Aplicar ajustes de escala y posición">
+            <i class="fas fa-check mr-2"></i>Aplicar Ajustes
+          </button>
         </div>
       </div>
       
@@ -322,7 +326,7 @@
         });
         if (!response.ok) throw new Error('Error al actualizar contenido');
       } catch (error) {
-        alert('Error: ' + error.message);
+        alert('Error al enviar al servidor: ' + error.message);
       }
     }
 
@@ -341,20 +345,20 @@
         });
         if (!response.ok) throw new Error('Error al subir archivo');
         const { path } = await response.json();
-        const fullMediaUrl = path;
-        currentMediaUrl = fullMediaUrl;
-
+        console.log('Backend response path:', path); // Debug
+        currentMediaUrl = path.startsWith('http') ? path : `${backendUrl}${path}`; // Handle absolute or relative paths
+        console.log('Constructed media URL:', currentMediaUrl); // Debug
         const scale = document.getElementById('media-scale').value;
         const position = document.getElementById('media-position').value;
         await setState({ 
-          media: { url: fullMediaUrl, scale: parseFloat(scale), position: parseInt(position) }, 
+          media: { url: currentMediaUrl, scale: parseFloat(scale), position: parseInt(position) }, 
           text: null, 
           background: currentBackground 
         });
         updateMediaPreview();
         fileInput.value = '';
       } catch (error) {
-        alert('Error: ' + error.message);
+        alert('Error al subir el archivo: ' + error.message);
       }
     }
 
@@ -364,24 +368,48 @@
       const previewMedia = document.getElementById('preview-media');
       const previewVideo = document.getElementById('preview-video');
       
+      document.getElementById('media-scale-value').textContent = `${parseFloat(scale).toFixed(1)}x`;
+      document.getElementById('media-position-value').textContent = `${position}%`;
+      
       if (currentMediaUrl) {
-        if (currentMediaUrl.endsWith('.mp4') || currentMediaUrl.endsWith('.mov')) {
-          previewMedia.style.display = 'none';
-          previewVideo.style.display = 'block';
-          previewVideo.src = currentMediaUrl;
-          previewVideo.play();
-        } else {
-          previewMedia.style.display = 'block';
-          previewVideo.style.display = 'none';
-          previewMedia.src = currentMediaUrl;
-        }
-        const mediaElement = previewVideo.style.display === 'block' ? previewVideo : previewMedia;
+        const isVideo = currentMediaUrl.endsWith('.mp4') || currentMediaUrl.endsWith('.mov');
+        previewMedia.style.display = isVideo ? 'none' : 'block';
+        previewVideo.style.display = isVideo ? 'block' : 'none';
+        
+        const mediaElement = isVideo ? previewVideo : previewMedia;
+        mediaElement.src = currentMediaUrl;
         mediaElement.style.transform = `translateY(-50%) scale(${scale})`;
         mediaElement.style.top = `${position}%`;
+        
+        // Error handling for media loading
+        mediaElement.onerror = () => {
+          alert('Error: No se pudo cargar el archivo multimedia. Verifica la URL o el formato.');
+          console.error('Media load error:', currentMediaUrl);
+        };
+        
+        if (isVideo) {
+          previewVideo.play().catch((err) => {
+            console.log('Video play failed:', err);
+          });
+        }
       } else {
         previewMedia.style.display = 'none';
         previewVideo.style.display = 'none';
       }
+    }
+
+    function applyMediaAdjustments() {
+      if (!currentMediaUrl) {
+        alert('Por favor, sube un archivo primero');
+        return;
+      }
+      const scale = document.getElementById('media-scale').value;
+      const position = document.getElementById('media-position').value;
+      setState({ 
+        media: { url: currentMediaUrl, scale: parseFloat(scale), position: parseInt(position) }, 
+        text: null, 
+        background: currentBackground 
+      });
     }
 
     function setColor(color) {
@@ -467,6 +495,7 @@
       document.getElementById('media-scale-value').textContent = '1.0x';
       document.getElementById('media-position-value').textContent = '50%';
       currentMediaUrl = null;
+      setState({ media: null, text: null, background: currentBackground });
       updateTextPreview();
       updateMediaPreview();
       document.getElementById('bg-speed-value').textContent = '15s';
@@ -545,6 +574,7 @@
     });
 
     document.getElementById('upload-btn').addEventListener('click', uploadMedia);
+    document.getElementById('apply-media-adjustments-btn').addEventListener('click', applyMediaAdjustments);
     document.getElementById('custom-color-btn').addEventListener('click', () => {
       stopRandomColors();
       const color = document.getElementById('custom-color').value;
@@ -572,31 +602,11 @@
     });
 
     document.getElementById('media-scale').addEventListener('input', (e) => {
-      const scale = e.target.value;
-      document.getElementById('media-scale-value').textContent = `${parseFloat(scale).toFixed(1)}x`;
       updateMediaPreview();
-      if (currentMediaUrl) {
-        const position = document.getElementById('media-position').value;
-        setState({ 
-          media: { url: currentMediaUrl, scale: parseFloat(scale), position: parseInt(position) }, 
-          text: null, 
-          background: currentBackground 
-        });
-      }
     });
 
     document.getElementById('media-position').addEventListener('input', (e) => {
-      const position = e.target.value;
-      document.getElementById('media-position-value').textContent = `${position}%`;
       updateMediaPreview();
-      if (currentMediaUrl) {
-        const scale = document.getElementById('media-scale').value;
-        setState({ 
-          media: { url: currentMediaUrl, scale: parseFloat(scale), position: parseInt(position) }, 
-          text: null, 
-          background: currentBackground 
-        });
-      }
     });
 
     document.getElementById('random-colors-btn').addEventListener('click', toggleRandomColors);
