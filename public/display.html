@@ -70,10 +70,10 @@
         const response = await fetch(`${backendUrl}/state/${totemId}`);
         if (!response.ok) throw new Error('Error al obtener estado');
         const state = await response.json();
-        console.log('Fetched state:', state); // Debug
+        console.log('Fetched state for totem:', { totemId, state }); // Debug
         updateDisplay(state);
       } catch (error) {
-        console.error('Error fetching state:', error.message);
+        console.error('Fetch state error:', error.message);
       }
     }
 
@@ -86,16 +86,25 @@
       // Apply background
       if (state.background) {
         if (state.background.type === 'color') {
-          container.style.backgroundColor = state.background.value;
-          container.style.animation = 'none';
           container.classList.remove('animated-bg');
+          container.style.backgroundColor = state.background.value;
+          console.log('Applied static color:', state.background.value); // Debug
         } else if (state.background.type === 'animatedBackground') {
+          container.classList.remove('animated-bg');
+          container.style.backgroundColor = '';
           container.style.setProperty('--color1', state.background.value[0]);
           container.style.setProperty('--color2', state.background.value[1]);
           container.style.setProperty('--color3', state.background.value[2] || state.background.value[0]);
           container.style.setProperty('--animation-duration', `${state.background.duration}s`);
+          void container.offsetWidth; // Trigger reflow
           container.classList.add('animated-bg');
-          container.style.backgroundColor = ''; // Clear static background
+          console.log('Applied animated background:', {
+            color1: state.background.value[0],
+            color2: state.background.value[1],
+            color3: state.background.value[2] || state.background.value[0],
+            duration: state.background.duration,
+            hasAnimatedBg: container.classList.contains('animated-bg')
+          }); // Debug
         }
       }
 
@@ -107,6 +116,7 @@
         textElement.style.color = state.text.color;
         textElement.style.top = `${state.text.position}%`;
         textElement.style.transform = 'translateY(-50%)';
+        console.log('Applied text:', state.text); // Debug
       } else {
         textElement.textContent = '';
       }
@@ -129,10 +139,12 @@
             console.error('Video play error:', err);
           });
         }
+        console.log('Applied media:', state.media); // Debug
       } else if (!state.media) {
         mediaElement.style.display = 'none';
         videoElement.style.display = 'none';
         currentMediaUrl = null;
+        console.log('Cleared media'); // Debug
       }
     }
 
