@@ -33,12 +33,22 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+    .preview-media {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 5; /* Below text */
+    }
     .preview-text {
       position: absolute;
       width: 100%;
       text-align: center;
       white-space: pre-wrap;
       animation: subtleAnimation 30s infinite;
+      z-index: 10; /* Above media */
     }
     @keyframes subtleAnimation {
       0% { opacity: 0; transform: translateY(20px); }
@@ -277,6 +287,8 @@
             <i class="fas fa-text-height mr-2"></i>Aplicar Texto
           </button>
           <div class="text-preview" id="text-preview">
+            <img id="preview-media" class="preview-media" style="display: none;">
+            <video id="preview-video" class="preview-media" style="display: none;" loop muted></video>
             <div class="preview-text" id="preview-text">Texto de ejemplo</div>
           </div>
         </div>
@@ -295,6 +307,7 @@
     let currentBackground = { type: 'color', value: '#F8E1E9' };
     let randomColorsActive = false;
     let randomColorInterval = null;
+    let currentMediaUrl = null;
 
     async function setState({ text, background, media }) {
       const totemId = document.getElementById('totem-select').value;
@@ -327,11 +340,41 @@
         });
         if (!response.ok) throw new Error('Error al subir archivo');
         const { path } = await response.json();
-        const fullMediaUrl = path.startsWith('http') ? path : `${backendUrl}${path}`;
-        await setState({ media: fullMediaUrl, text: null, background: currentBackground });
+        currentMediaUrl = path.startsWith('http') ? path : `${backendUrl}${path}`;
+        console.log('Uploaded media URL:', currentMediaUrl); // Debug
+        await setState({ media: currentMediaUrl, text: null, background: currentBackground });
+        updateMediaPreview();
         fileInput.value = '';
       } catch (error) {
-        alert('Error: ' + error.message);
+        alert('Error al subir el archivo: ' + error.message);
+      }
+    }
+
+    function updateMediaPreview() {
+      const previewMedia = document.getElementById('preview-media');
+      const previewVideo = document.getElementById('preview-video');
+      
+      if (currentMediaUrl) {
+        const isVideo = currentMediaUrl.endsWith('.mp4') || currentMediaUrl.endsWith('.mov');
+        previewMedia.style.display = isVideo ? 'none' : 'block';
+        previewVideo.style.display = isVideo ? 'block' : 'none';
+        
+        const mediaElement = isVideo ? previewVideo : previewMedia;
+        mediaElement.src = currentMediaUrl;
+        
+        mediaElement.onerror = () => {
+          alert('Error: No se pudo cargar el archivo multimedia. Verifica la URL o el formato.');
+          console.error('Media load error:', currentMediaUrl);
+        };
+        
+        if (isVideo) {
+          previewVideo.play().catch(err => {
+            console.error('Video play error:', err);
+          });
+        }
+      } else {
+        previewMedia.style.display = 'none';
+        previewVideo.style.display = 'none';
       }
     }
 
@@ -413,7 +456,9 @@
       document.getElementById('bg-color2').value = '#D4A017';
       document.getElementById('bg-color3').value = '#FFFFFF';
       document.getElementById('bg-speed').value = '15';
+      currentMediaUrl = null;
       updateTextPreview();
+      updateMediaPreview();
       document.getElementById('bg-speed-value').textContent = '15s';
       document.getElementById('position-value').textContent = '50%';
       setState({ text: null, background: currentBackground, media: null });
@@ -491,6 +536,7 @@
     });
 
     document.getElementById('upload-btn').addEventListener('click', uploadMedia);
+
     document.getElementById('custom-color-btn').addEventListener('click', () => {
       stopRandomColors();
       const color = document.getElementById('custom-color').value;
@@ -531,6 +577,8 @@
       }
       const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
       setState({ text: textConfig, background: currentBackground, media: null });
+      currentMediaUrl = null;
+      updateMediaPreview();
     });
 
     document.getElementById('custom-text').addEventListener('input', updateTextPreview);
@@ -545,6 +593,7 @@
     document.getElementById('reset-btn').addEventListener('click', resetSettings);
 
     updateTextPreview();
+    updateMediaPreview();
   </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93893b37c8b5c000',t:'MTc0NjAzOTA5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c0fca78a136772',t:'MTc0NjYyMzczNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
