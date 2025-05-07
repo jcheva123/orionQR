@@ -318,8 +318,10 @@
           body: JSON.stringify({ totemId, text, background, media })
         });
         if (!response.ok) throw new Error('Error al actualizar contenido');
+        console.log('State updated:', { totemId, text, background, media }); // Debug
       } catch (error) {
-        alert('Error: ' + error.message);
+        alert('Error al actualizar estado: ' + error.message);
+        console.error('Set state error:', error);
       }
     }
 
@@ -347,6 +349,7 @@
         fileInput.value = '';
       } catch (error) {
         alert('Error al subir el archivo: ' + error.message);
+        console.error('Upload error:', error);
       }
     }
 
@@ -391,14 +394,15 @@
     function setAnimatedBackground(colors, duration) {
       stopRandomColors();
       currentBackground = { type: 'animatedBackground', value: colors, duration: parseInt(duration) };
+      console.log('Applying animated background:', { colors, duration }); // Debug
       setState({ background: currentBackground });
       const preview = document.getElementById('text-preview');
       preview.style.setProperty('--color1', colors[0]);
       preview.style.setProperty('--color2', colors[1]);
       preview.style.setProperty('--color3', colors[2] || colors[0]);
       preview.style.setProperty('--animation-duration', `${duration}s`);
-      preview.style.animation = 'none';
       preview.classList.add('animated-bg');
+      preview.style.backgroundColor = ''; // Clear static background
     }
 
     function toggleRandomColors() {
