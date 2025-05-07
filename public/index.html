@@ -318,7 +318,7 @@
           body: JSON.stringify({ totemId, text, background, media })
         });
         if (!response.ok) throw new Error('Error al actualizar contenido');
-        console.log('State updated:', { totemId, text, background, media }); // Debug
+        console.log('State updated for totem:', { totemId, text, background, media }); // Debug
       } catch (error) {
         alert('Error al actualizar estado: ' + error.message);
         console.error('Set state error:', error);
@@ -386,9 +386,9 @@
       currentBackground = { type: 'color', value: color };
       setState({ background: currentBackground });
       const preview = document.getElementById('text-preview');
-      preview.style.backgroundColor = color;
-      preview.style.animation = 'none';
       preview.classList.remove('animated-bg');
+      preview.style.backgroundColor = color;
+      console.log('Set static color:', color); // Debug
     }
 
     function setAnimatedBackground(colors, duration) {
@@ -397,12 +397,25 @@
       console.log('Applying animated background:', { colors, duration }); // Debug
       setState({ background: currentBackground });
       const preview = document.getElementById('text-preview');
+      // Clear previous styles
+      preview.classList.remove('animated-bg');
+      preview.style.backgroundColor = '';
+      // Set CSS custom properties
       preview.style.setProperty('--color1', colors[0]);
       preview.style.setProperty('--color2', colors[1]);
       preview.style.setProperty('--color3', colors[2] || colors[0]);
       preview.style.setProperty('--animation-duration', `${duration}s`);
+      // Force animation reapply
+      void preview.offsetWidth; // Trigger reflow
       preview.classList.add('animated-bg');
-      preview.style.backgroundColor = ''; // Clear static background
+      console.log('Animation applied to preview:', {
+        color1: preview.style.getPropertyValue('--color1'),
+        color2: preview.style.getPropertyValue('--color2'),
+        color3: preview.style.getPropertyValue('--color3'),
+        duration: preview.style.getPropertyValue('--animation-duration'),
+        hasAnimatedBg: preview.classList.contains('animated-bg')
+      }); // Debug
+      alert('Fondo animado aplicado con éxito'); // User feedback
     }
 
     function toggleRandomColors() {
@@ -414,9 +427,9 @@
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
           currentBackground = { type: 'color', value: randomColor };
           setState({ background: currentBackground });
-          preview.style.backgroundColor = randomColor;
-          preview.style.animation = 'none';
           preview.classList.remove('animated-bg');
+          preview.style.backgroundColor = randomColor;
+          console.log('Random color applied:', randomColor); // Debug
         }, 1000);
       } else {
         stopRandomColors();
@@ -430,6 +443,7 @@
         clearInterval(randomColorInterval);
         randomColorInterval = null;
       }
+      console.log('Stopped random colors'); // Debug
     }
 
     function updateTextPreview() {
@@ -446,6 +460,7 @@
       previewText.style.color = color;
       previewText.style.top = `${position}%`;
       previewText.style.transform = 'translateY(-50%)';
+      console.log('Text preview updated:', { text, font, size, color, position }); // Debug
     }
 
     function resetSettings() {
@@ -466,6 +481,7 @@
       document.getElementById('bg-speed-value').textContent = '15s';
       document.getElementById('position-value').textContent = '50%';
       setState({ text: null, background: currentBackground, media: null });
+      console.log('Settings reset'); // Debug
     }
 
     // Accordion functionality
@@ -484,6 +500,7 @@
       const icon = document.getElementById('theme-toggle').querySelector('i');
       icon.classList.toggle('fa-moon');
       icon.classList.toggle('fa-sun');
+      console.log('Theme toggled:', document.body.classList.contains('light-mode') ? 'light' : 'dark'); // Debug
     });
 
     // Particle animation
@@ -564,6 +581,7 @@
         preview.style.setProperty('--animation-duration', `${duration}s`);
         currentBackground.duration = parseInt(duration);
         setState({ background: currentBackground });
+        console.log('Updated animation duration:', duration); // Debug
       }
     });
 
@@ -583,6 +601,7 @@
       setState({ text: textConfig, background: currentBackground, media: null });
       currentMediaUrl = null;
       updateMediaPreview();
+      console.log('Text applied:', textConfig); // Debug
     });
 
     document.getElementById('custom-text').addEventListener('input', updateTextPreview);
