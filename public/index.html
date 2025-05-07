@@ -29,17 +29,17 @@
       position: relative;
       overflow: hidden;
       margin: 1rem auto;
-      border: 2px solid rgba(255, 255, 255, 0.2);
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
     }
     .preview-media {
       position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
-      top: 50%;
-      transform: translateY(-50%);
+      object-fit: none; /* Pixel-perfect for 344x774px media */
       z-index: 5; /* Below text */
     }
     .preview-text {
