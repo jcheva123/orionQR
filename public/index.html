@@ -176,7 +176,7 @@
       
       <div class="mb-6">
         <div class="accordion-header flex justify-between items-center">
-          <h3 class="text-xl">Cargar Foto/Video</h3>
+          <h3 class="text-xl">📸 Cargar Foto/Video</h3>
           <i class="fas fa-chevron-down"></i>
         </div>
         <div class="accordion-content">
@@ -189,7 +189,7 @@
       
       <div class="mb-6">
         <div class="accordion-header flex justify-between items-center">
-          <h3 class="text-xl">Color de Fondo</h3>
+          <h3 class="text-xl">🎨 Color de Fondo</h3>
           <i class="fas fa-chevron-down"></i>
         </div>
         <div class="accordion-content">
@@ -197,9 +197,7 @@
             <button class="color-btn bg-black tooltip" onclick="setColor('black')" data-tooltip="Negro (Apagar)"></button>
             <button class="color-btn bg-red-500 tooltip" onclick="setColor('red')" data-tooltip="Rojo"></button>
             <button class="color-btn bg-blue-500 tooltip" onclick="setColor('blue')" data-tooltip="Azul"></button>
-            <button class="color-btn bg-green-500 tooltip" onclick="setColorunion.addEventListener('click', function() {
-    window.location.href = '/';
-});            <button class="color-btn bg-green-500 tooltip" onclick="setColor('green')" data-tooltip="Verde"></button>
+            <button class="color-btn bg-green-500 tooltip" onclick="setColor('green')" data-tooltip="Verde"></button>
             <button class="color-btn bg-yellow-500 tooltip" onclick="setColor('yellow')" data-tooltip="Amarillo"></button>
             <button class="color-btn bg-[#F8E1E9] border-gray-400 tooltip" onclick="setColor('#F8E1E9')" data-tooltip="Rosa"></button>
           </div>
@@ -238,7 +236,7 @@
       
       <div class="mb-6">
         <div class="accordion-header flex justify-between items-center">
-          <h3 class="text-xl">Texto Personalizado</h3>
+          <h3 class="text-xl">✍️ Texto Personalizado</h3>
           <i class="fas fa-chevron-down"></i>
         </div>
         <div class="accordion-content">
@@ -342,7 +340,7 @@
 
     function setAnimatedBackground(colors, duration) {
       stopRandomColors();
-      currentBackground = { type: 'animatedBackground', value: colors };
+      currentBackground = { type: 'animatedBackground', value: colors, duration: parseInt(duration) };
       setState({ background: currentBackground });
       const preview = document.getElementById('text-preview');
       preview.style.setProperty('--color1', colors[0]);
@@ -486,11 +484,13 @@
 
     document.getElementById('upload-btn').addEventListener('click', uploadMedia);
     document.getElementById('custom-color-btn').addEventListener('click', () => {
+      stopRandomColors();
       const color = document.getElementById('custom-color').value;
       setColor(color);
     });
 
     document.getElementById('animated-bg-btn').addEventListener('click', () => {
+      stopRandomColors();
       const color1 = document.getElementById('bg-color1').value;
       const color2 = document.getElementById('bg-color2').value;
       const color3 = document.getElementById('bg-color3').value;
@@ -499,13 +499,13 @@
     });
 
     document.getElementById('bg-speed').addEventListener('input', (e) => {
-      document.getElementById('bg-speed-value').textContent = `${e.target.value}s`;
+      const duration = e.target.value;
+      document.getElementById('bg-speed-value').textContent = `${duration}s`;
       const preview = document.getElementById('text-preview');
       if (preview.classList.contains('animated-bg')) {
-        const color1 = document.getElementById('bg-color1').value;
-        const color2 = document.getElementById('bg-color2').value;
-        const color3 = document.getElementById('bg-color3').value;
-        setAnimatedBackground([color1, color2, color3], e.target.value);
+        preview.style.setProperty('--animation-duration', `${duration}s`);
+        currentBackground.duration = parseInt(duration);
+        setState({ background: currentBackground });
       }
     });
 
