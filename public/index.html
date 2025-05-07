@@ -317,7 +317,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ totemId, text, background, media })
         });
-        if (!response.ok) throw new Error('Error al actualizar contenido');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Error al actualizar contenido');
+        }
         console.log('State updated for totem:', { totemId, text, background, media }); // Debug
       } catch (error) {
         alert('Error al actualizar estado: ' + error.message);
@@ -328,28 +331,56 @@
     async function uploadMedia() {
       const fileInput = document.getElementById('media-upload');
       const totemId = document.getElementById('totem-select').value;
-      if (!fileInput.files[0]) {
+      const file = fileInput.files[0];
+      if (!file) {
         alert('Selecciona un archivo');
         return;
       }
+
+      // Client-side validation
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        alert('El archivo es demasiado grande. Usa un archivo menor a 10MB.');
+        return;
+      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Formato no soportado. Usa JPEG, PNG, MP4 o MOV.');
+        return;
+      }
+
       const formData = new FormData();
-      formData.append('media', fileInput.files[0]);
+      formData.append('media', file);
       formData.append('totemId', totemId);
+
       try {
         const response = await fetch(`${backendUrl}/upload`, {
           method: 'POST',
           body: formData
         });
-        if (!response.ok) throw new Error('Error al subir archivo');
-        const { path } = await response.json();
-        currentMediaUrl = path.startsWith('http') ? path : `${backendUrl}${path}`;
-        console.log('Uploaded media URL:', currentMediaUrl); // Debug
+        const responseData = await response.json();
+        if (!response.ok) {
+          throw new Error(responseData.error || 'Error al subir archivo');
+        }
+        currentMediaUrl = responseData.path.startsWith('http') 
+          ? responseData.path 
+          : `${backendUrl}${responseData.path}`;
+        console.log('Uploaded media:', { 
+          url: currentMediaUrl, 
+          type: file.type, 
+          size: file.size 
+        }); // Debug
         await setState({ media: currentMediaUrl, text: null, background: currentBackground });
         updateMediaPreview();
         fileInput.value = '';
+        alert('Archivo subido exitosamente');
       } catch (error) {
-        alert('Error al subir el archivo: ' + error.message);
-        console.error('Upload error:', error);
+        alert(`Error al subir el archivo: ${error.message}`);
+        console.error('Upload error:', {
+          message: error.message,
+          status: response?.status,
+          responseData
+        });
       }
     }
 
@@ -618,7 +649,5 @@
     updateTextPreview();
     updateMediaPreview();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93893b37c8b5c000',t:'MTc0NjAzOTA5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c0fca78a136772',t:'MTc0NjYyMzczNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
