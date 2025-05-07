@@ -70,6 +70,7 @@
         const response = await fetch(`${backendUrl}/state/${totemId}`);
         if (!response.ok) throw new Error('Error al obtener estado');
         const state = await response.json();
+        console.log('Fetched state:', state); // Debug
         updateDisplay(state);
       } catch (error) {
         console.error('Error fetching state:', error.message);
@@ -94,6 +95,7 @@
           container.style.setProperty('--color3', state.background.value[2] || state.background.value[0]);
           container.style.setProperty('--animation-duration', `${state.background.duration}s`);
           container.classList.add('animated-bg');
+          container.style.backgroundColor = ''; // Clear static background
         }
       }
 
