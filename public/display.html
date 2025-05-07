@@ -64,6 +64,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const totemId = urlParams.get('totemId') || 'totem1';
     let currentMediaUrl = null;
+    let lastBackgroundState = null;
 
     async function fetchState() {
       try {
@@ -90,21 +91,33 @@
           container.style.backgroundColor = state.background.value;
           console.log('Applied static color:', state.background.value); // Debug
         } else if (state.background.type === 'animatedBackground') {
-          container.classList.remove('animated-bg');
-          container.style.backgroundColor = '';
-          container.style.setProperty('--color1', state.background.value[0]);
-          container.style.setProperty('--color2', state.background.value[1]);
-          container.style.setProperty('--color3', state.background.value[2] || state.background.value[0]);
-          container.style.setProperty('--animation-duration', `${state.background.duration}s`);
-          void container.offsetWidth; // Trigger reflow
-          container.classList.add('animated-bg');
-          console.log('Applied animated background:', {
-            color1: state.background.value[0],
-            color2: state.background.value[1],
-            color3: state.background.value[2] || state.background.value[0],
-            duration: state.background.duration,
-            hasAnimatedBg: container.classList.contains('animated-bg')
-          }); // Debug
+          // Check if background state has changed
+          const backgroundChanged = !lastBackgroundState ||
+            lastBackgroundState.type !== 'animatedBackground' ||
+            lastBackgroundState.value[0] !== state.background.value[0] ||
+            lastBackgroundState.value[1] !== state.background.value[1] ||
+            lastBackgroundState.value[2] !== state.background.value[2] ||
+            lastBackgroundState.duration !== state.background.duration;
+          
+          if (backgroundChanged) {
+            container.classList.remove('animated-bg');
+            container.style.backgroundColor = '';
+            container.style.setProperty('--color1', state.background.value[0]);
+            container.style.setProperty('--color2', state.background.value[1]);
+            container.style.setProperty('--color3', state.background.value[2] || state.background.value[0]);
+            container.style.setProperty('--animation-duration', `${state.background.duration}s`);
+            container.classList.add('animated-bg');
+            console.log('Applied animated background:', {
+              color1: state.background.value[0],
+              color2: state.background.value[1],
+              color3: state.background.value[2] || state.background.value[0],
+              duration: state.background.duration,
+              hasAnimatedBg: container.classList.contains('animated-bg')
+            }); // Debug
+          } else {
+            console.log('Skipped animated background update (no change)'); // Debug
+          }
+          lastBackgroundState = { ...state.background };
         }
       }
 
