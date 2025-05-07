@@ -11,75 +11,59 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configure multer for file uploads
+// Configure Multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, res, cb) => {
-    cb(null, 'uploads/');
+  destination: (req, file, cb) => {
+    cb(null, 'Uploads/');
   },
   filename: (req, file, cb) => {
+    const totemId = req.body.totemId || 'totem1';
     const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${file.originalname}`);
+    cb(null, `${totemId}-${Date.now()}${ext}`);
   }
 });
 const upload = multer({ storage });
 
-// In-memory state for each totem
-const totemStates = {
-  totem1: { text: null, background: { type: 'color', value: '#F8E1E9' }, media: null },
-  totem2: { text: null, background: { type: 'color', value: '#F8E1E9' }, media: null },
-  totem3: { text: null, background: { type: 'color', value: '#F8E1E9' }, media: null }
+// State storage
+const states = {
+  totem1: { background: { type: 'color', value: '#F8E1E9' } },
+  totem2: { background: { type: 'color', value: '#F8E1E9' } },
+  totem3: { background: { type: 'color', value: '#F8E1E9' } }
 };
 
-// Upload endpoint
+// Routes
 app.post('/upload', upload.single('media'), (req, res) => {
-  try {
-    const totemId = req.body.totemId;
-    if (!['totem1', 'totem2', 'totem3'].includes(totemId)) {
-      return res.status(400).json({ error: 'Invalid totemId' });
-    }
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-    const filePath = `/uploads/${req.file.filename}`;
-    res.json({ path: filePath });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  if (!req.file) {
+    console.error('Upload error: No file uploaded'); // Debug
+    return res.status(400).json({ error: 'No file uploaded' });
   }
+  const filePath = `/uploads/${req.file.filename}`;
+  console.log('Uploaded file:', { totemId: req.body.totemId, path: filePath }); // Debug
+  res.json({ path: filePath });
 });
 
-// State update endpoint
 app.post('/state', (req, res) => {
-  try {
-    const { totemId, text, background, media } = req.body;
-    if (!['totem1', 'totem2', 'totem3'].includes(totemId)) {
-      return res.status(400).json({ error: 'Invalid totemId' });
-    }
-    totemStates[totemId] = { text, background, media };
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// State retrieval endpoint for display
-app.get('/state/:totemId', (req, res) => {
-  const totemId = req.params.totemId;
+  const { totemId } = req.body;
   if (!['totem1', 'totem2', 'totem3'].includes(totemId)) {
+    console.error('Invalid totemId:', totemId); // Debug
     return res.status(400).json({ error: 'Invalid totemId' });
   }
-  res.json(totemStates[totemId]);
+  states[totemId] = req.body;
+  console.log('Stored state:', { totemId, state: req.body }); // Debug
+  res.json({ success: true });
 });
 
-// Serve control and display pages
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+app.get('/state/:totemId', (req, res) => {
+  const { totemId } = req.params;
+  if (!['totem1', 'totem2', 'totem3'].includes(totemId)) {
+    console.error('Invalid totemId for GET:', totemId); // Debug
+    return res.status(400).json({ error: 'Invalid totemId' });
+  }
+  const state = states[totemId] || { background: { type: 'color', value: '#F8E1E9' } };
+  console.log('Retrieved state:', { totemId, state }); // Debug
+  res.json(state);
 });
 
-app.get('/display/:totemId', (req, res) => {
-  res.sendFile(path.join(__dirname, 'display.html'));
-});
-
-// Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
