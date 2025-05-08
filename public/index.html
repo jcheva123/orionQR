@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OrionQR - Control Totem LED</title>
-  <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
       background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
@@ -39,7 +39,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover; /* Ajusta la imagen para cubrir todo el contenedor */
+      object-fit: contain;
       z-index: 5; /* Below text */
     }
     .preview-text {
@@ -228,7 +228,7 @@
             </div>
             <div class="mb-2 flex items-center">
               <label class="block mr-2">Color 2:</label>
-              <input id="bg-color2" type="color booking" value="#D4A017" class="color-input bg-gray-800 border-gray-600">
+              <input id="bg-color2" type="color" value="#D4A017" class="color-input bg-gray-800 border-gray-600">
             </div>
             <div class="mb-2 flex items-center">
               <label class="block mr-2">Color 3 (opcional):</label>
@@ -436,4 +436,218 @@
       preview.style.setProperty('--color1', colors[0]);
       preview.style.setProperty('--color2', colors[1]);
       preview.style.setProperty('--color3', colors[2] || colors[0]);
-      preview.style.setProperty('--animation-duration', `${durationSeconds
+      preview.style.setProperty('--animation-duration', `${durationSeconds}s`);
+      // Apply animation
+      preview.classList.add('animated-bg');
+      console.log('Animation applied to preview:', {
+        color1: preview.style.getPropertyValue('--color1'),
+        color2: preview.style.getPropertyValue('--color2'),
+        color3: preview.style.getPropertyValue('--color3'),
+        duration: preview.style.getPropertyValue('--animation-duration'),
+        hasAnimatedBg: preview.classList.contains('animated-bg')
+      }); // Debug
+      alert('Fondo animado aplicado con duración de ' + durationSeconds + 's'); // User feedback
+    }
+
+    function toggleRandomColors() {
+      randomColorsActive = !randomColorsActive;
+      const preview = document.getElementById('text-preview');
+      if (randomColorsActive) {
+        randomColorInterval = setInterval(() => {
+          const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#F8E1E9'];
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          currentBackground = { type: 'color', value: randomColor };
+          setState({ background: currentBackground });
+          preview.classList.remove('animated-bg');
+          preview.style.backgroundColor = randomColor;
+          console.log('Random color applied:', randomColor); // Debug
+        }, 1000);
+      } else {
+        stopRandomColors();
+        setColor('#F8E1E9');
+      }
+    }
+
+    function stopRandomColors() {
+      randomColorsActive = false;
+      if (randomColorInterval) {
+        clearInterval(randomColorInterval);
+        randomColorInterval = null;
+      }
+      console.log('Stopped random colors'); // Debug
+    }
+
+    function updateTextPreview() {
+      const text = document.getElementById('custom-text').value || 'Texto de ejemplo';
+      const font = document.getElementById('text-font').value;
+      const size = document.getElementById('text-size').value + 'px';
+      const color = document.getElementById('text-color').value;
+      const position = document.getElementById('text-position').value;
+      const previewText = document.getElementById('preview-text');
+
+      previewText.textContent = text;
+      previewText.style.fontFamily = `'${font}', serif`;
+      previewText.style.fontSize = size;
+      previewText.style.color = color;
+      previewText.style.top = `${position}%`;
+      previewText.style.transform = 'translateY(-50%)';
+      console.log('Text preview updated:', { text, font, size, color, position }); // Debug
+    }
+
+    function resetSettings() {
+      stopRandomColors();
+      setColor('#F8E1E9');
+      document.getElementById('custom-text').value = '';
+      document.getElementById('text-font').value = 'Playfair Display';
+      document.getElementById('text-size').value = '30';
+      document.getElementById('text-color').value = '#000000';
+      document.getElementById('text-position').value = '50';
+      document.getElementById('bg-color1').value = '#F8E1E9';
+      document.getElementById('bg-color2').value = '#D4A017';
+      document.getElementById('bg-color3').value = '#FFFFFF';
+      document.getElementById('bg-speed').value = '15';
+      currentMediaUrl = null;
+      updateTextPreview();
+      updateMediaPreview();
+      document.getElementById('bg-speed-value').textContent = '15s';
+      document.getElementById('position-value').textContent = '50%';
+      setState({ text: null, background: currentBackground, media: null });
+      console.log('Settings reset'); // Debug
+    }
+
+    // Accordion functionality
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const content = header.nextElementSibling;
+        content.classList.toggle('open');
+        header.querySelector('i').classList.toggle('fa-chevron-down');
+        header.querySelector('i').classList.toggle('fa-chevron-up');
+      });
+    });
+
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      const icon = document.getElementById('theme-toggle').querySelector('i');
+      icon.classList.toggle('fa-moon');
+      icon.classList.toggle('fa-sun');
+      console.log('Theme toggled:', document.body.classList.contains('light-mode') ? 'light' : 'dark'); // Debug
+    });
+
+    // Particle animation
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = [];
+    for (let i = 0; i < 50; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 1,
+        vx: Math.random() * 2 - 1,
+        vy: Math.random() * 2 - 1
+      });
+    }
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fill();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Sound effect for buttons
+    const clickSound = new Audio('https://www.soundjay.com/buttons/button-3.mp3');
+    clickSound.volume = 0.2;
+    document.querySelectorAll('.btn-primary, .btn-secondary, .color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        clickSound.play();
+      });
+    });
+
+    // Event listeners
+    document.getElementById('admin-password').addEventListener('input', (e) => {
+      if (e.target.value === 'admin123') {
+        document.getElementById('admin-panel').style.display = 'block';
+      } else {
+        document.getElementById('admin-panel').style.display = 'none';
+      }
+    });
+
+    document.getElementById('upload-btn').addEventListener('click', uploadMedia);
+
+    document.getElementById('custom-color-btn').addEventListener('click', () => {
+      stopRandomColors();
+      const color = document.getElementById('custom-color').value;
+      setColor(color);
+    });
+
+    document.getElementById('animated-bg-btn').addEventListener('click', () => {
+      stopRandomColors();
+      const color1 = document.getElementById('bg-color1').value;
+      const color2 = document.getElementById('bg-color2').value;
+      const color3 = document.getElementById('bg-color3').value;
+      const duration = document.getElementById('bg-speed').value;
+      setAnimatedBackground([color1, color2, color3], duration);
+    });
+
+    document.getElementById('bg-speed').addEventListener('input', (e) => {
+      const duration = e.target.value;
+      document.getElementById('bg-speed-value').textContent = `${duration}s`;
+      const preview = document.getElementById('text-preview');
+      preview.style.setProperty('--animation-duration', `${duration}s`);
+      if (currentBackground.type === 'animatedBackground') {
+        currentBackground.duration = parseFloat(duration);
+        setState({ background: currentBackground });
+        console.log('Updated animation duration:', duration); // Debug
+      }
+    });
+
+    document.getElementById('random-colors-btn').addEventListener('click', toggleRandomColors);
+
+    document.getElementById('text-btn').addEventListener('click', () => {
+      const text = document.getElementById('custom-text').value;
+      const font = document.getElementById('text-font').value;
+      const size = document.getElementById('text-size').value;
+      const color = document.getElementById('text-color').value;
+      const position = document.getElementById('text-position').value;
+      if (!text) {
+        alert('Por favor, ingresa un texto');
+        return;
+      }
+      const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
+      setState({ text: textConfig, background: currentBackground, media: null });
+      currentMediaUrl = null;
+      updateMediaPreview();
+      console.log('Text applied:', textConfig); // Debug
+    });
+
+    document.getElementById('custom-text').addEventListener('input', updateTextPreview);
+    document.getElementById('text-font').addEventListener('change', updateTextPreview);
+    document.getElementById('text-size').addEventListener('change', updateTextPreview);
+    document.getElementById('text-color').addEventListener('input', updateTextPreview);
+    document.getElementById('text-position').addEventListener('input', (e) => {
+      document.getElementById('position-value').textContent = `${e.target.value}%`;
+      updateTextPreview();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', resetSettings);
+
+    updateTextPreview();
+    updateMediaPreview();
+  </script>
+</body>
+</html>
