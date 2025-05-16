@@ -20,6 +20,13 @@
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    .totem-buttons button:hover {
+      background-color: #0056b3;
     }
     .options {
       background: white;
@@ -32,11 +39,15 @@
     }
     .option-section h3 {
       margin-top: 0;
+      font-size: 18px;
     }
     input, select, button {
       margin: 5px 0;
       padding: 8px;
       font-size: 14px;
+    }
+    input[type="file"], input[type="color"], select {
+      width: 200px;
     }
     button {
       background-color: #007BFF;
@@ -44,33 +55,25 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      padding: 10px 15px;
     }
     button:hover {
       background-color: #0056b3;
     }
-    #media-display {
-      width: 100%;
-      max-width: 1280px; /* Example totem width */
-      height: 720px; /* Example totem height */
-      background: black;
-      margin-top: 20px;
-      overflow: hidden;
+    input[type="range"] {
+      width: 150px;
     }
-    #media-display img, #media-display video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain; /* Default: fit width, may have black bars */
-    }
-    #media-display.autofit img, #media-display.autofit video {
-      object-fit: cover; /* Autofit: cover full area, crop excess */
+    label {
+      display: block;
+      margin: 5px 0;
     }
   </style>
 </head>
 <body>
   <div class="totem-buttons">
-    <button>Totem 1</button>
-    <button>Totem 2</button>
-    <button>Totem 3</button>
+    <button onclick="selectTotem(1)">Totem 1</button>
+    <button onclick="selectTotem(2)">Totem 2</button>
+    <button onclick="selectTotem(3)">Totem 3</button>
   </div>
 
   <div class="options">
@@ -125,13 +128,18 @@
     <button onclick="resetOptions()">Restablecer</button>
   </div>
 
-  <div id="media-display"></div>
-
   <script>
+    let selectedTotem = 1;
+
+    function selectTotem(totem) {
+      selectedTotem = totem;
+      alert(`Totem ${totem} seleccionado`);
+      // Add logic to communicate with display.html for the selected totem
+    }
+
     function uploadMedia() {
       const fileInput = document.getElementById('mediaUpload');
       const autofit = document.getElementById('autofit').checked;
-      const mediaDisplay = document.getElementById('media-display');
       const file = fileInput.files[0];
 
       if (!file) {
@@ -141,23 +149,20 @@
 
       const url = URL.createObjectURL(file);
       const isVideo = file.type.startsWith('video/');
-      const element = isVideo ? document.createElement('video') : document.createElement('img');
+      const mediaData = {
+        type: isVideo ? 'video' : 'image',
+        url: url,
+        autofit: autofit
+      };
 
-      element.src = url;
-      if (isVideo) {
-        element.autoplay = true;
-        element.loop = true;
-        element.muted = true; // Ensure video plays without user interaction
-      }
-
-      mediaDisplay.innerHTML = '';
-      mediaDisplay.appendChild(element);
-      mediaDisplay.classList.toggle('autofit', autofit);
+      // Simulate sending data to display.html (replace with actual communication logic)
+      updateDisplay(mediaData);
     }
 
     function applyBgColor() {
       const color = document.getElementById('bgColor').value;
-      document.getElementById('media-display').style.background = color;
+      // Send to display.html
+      updateDisplay({ background: color });
     }
 
     function applyAnimatedBg() {
@@ -166,8 +171,12 @@
       const color3 = document.getElementById('animColor3').value || color2;
       const speed = document.getElementById('animSpeed').value;
       document.getElementById('speedValue').textContent = `${speed}s`;
-      document.getElementById('media-display').style.background = `linear-gradient(45deg, ${color1}, ${color2}, ${color3})`;
-      // Add animation logic if needed
+      const animData = {
+        background: `linear-gradient(45deg, ${color1}, ${color2}, ${color3})`,
+        animationSpeed: speed
+      };
+      // Send to display.html
+      updateDisplay(animData);
     }
 
     function applyRandomColors() {
@@ -185,15 +194,31 @@
       const textColor = document.getElementById('textColor').value;
       const position = document.getElementById('textPosition').value;
       document.getElementById('positionValue').textContent = `${position}%`;
-      // Apply text overlay logic here if needed
+      const textData = {
+        text: text,
+        font: font,
+        fontSize: fontSize,
+        color: textColor,
+        position: position
+      };
+      // Send to display.html
+      updateDisplay(textData);
     }
 
     function resetOptions() {
-      document.getElementById('media-display').innerHTML = '';
-      document.getElementById('media-display').style.background = 'black';
-      document.getElementById('media-display').classList.remove('autofit');
-      document.getElementById('autofit').checked = false;
       document.getElementById('mediaUpload').value = '';
+      document.getElementById('autofit').checked = false;
+      document.getElementById('customText').value = '';
+      // Reset display.html
+      updateDisplay({ reset: true });
+    }
+
+    function updateDisplay(data) {
+      // Placeholder: Replace with actual communication (e.g., WebSocket, localStorage, server)
+      console.log('Sending to display:', data);
+      // Example: Post message to display.html if it's in an iframe or separate window
+      // const displayWindow = window.open('display.html', 'totemDisplay');
+      // displayWindow.postMessage(data, '*');
     }
 
     // Update slider values in real-time
