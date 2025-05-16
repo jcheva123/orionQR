@@ -3,109 +3,182 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Totem Display</title>
+  <title>OrionQR - Totem Display</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
   <style>
     body {
+      background: #1e1e2f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #000;
     }
-    #container {
+    .display-container {
       width: 344px;
       height: 946px;
+      background-color: #F8E1E9;
       position: relative;
       overflow: hidden;
+      border-radius: 0; /* Sharp edges */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
     }
-    #content {
-      width: 100%;
-      height: 100%;
-      object-fit: contain; /* Default: scale to fit width */
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    #content.autofit {
-      object-fit: cover; /* Autofit: cover full screen, may crop */
-      min-width: 100%;
-      min-height: 100%;
-    }
-    #textOverlay {
+    .display-text {
       position: absolute;
       width: 100%;
       text-align: center;
-      pointer-events: none;
+      white-space: pre-wrap;
+      z-index: 10;
     }
-    @keyframes gradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    
+.cover-fit {
+  object-fit: cover;
+}
+.contain-fit {
+  object-fit: contain;
+}
+
+.display-media {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      z-index: 5;
+    }
+    @keyframes backgroundAnimation {
+      0% { background-color: var(--color1); }
+      33% { background-color: var(--color2); }
+      66% { background-color: var(--color3, var(--color1)); }
+      100% { background-color: var(--color1); }
+    }
+    .animated-bg {
+      animation: backgroundAnimation var(--animation-duration, 15s) infinite;
     }
   </style>
 </head>
 <body>
-  <div id="container">
-    <div id="content"></div>
-    <div id="textOverlay"></div>
+  <div class="display-container" id="display-container">
+    <img id="display-media" class="display-media" style="display: none;">
+    <video id="display-video" class="display-media" style="display: none;" loop muted></video>
+    <div class="display-text" id="display-text"></div>
   </div>
 
   <script>
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    }
+    const backendUrl = 'https://orionqr.onrender.com';
+    const urlParams = new URLSearchParams(window.location.search);
+    const totemId = urlParams.get('totemId') || 'totem1';
+    let currentMediaUrl = null;
+    let lastBackgroundState = null;
 
-    const totem = getQueryParam('totem') || '1';
-    const mediaUrl = localStorage.getItem(`totem${totem}_media`);
-    const autofit = localStorage.getItem(`totem${totem}_autofit`) === 'true';
-    const mediaType = localStorage.getItem(`totem${totem}_type`);
-    const bgColor = localStorage.getItem(`totem${totem}_bgColor`);
-    const animBg = localStorage.getItem(`totem${totem}_animBg`);
-    const textSettings = localStorage.getItem(`totem${totem}_text`);
-
-    const container = document.getElementById('container');
-    const content = document.getElementById('content');
-    const textOverlay = document.getElementById('textOverlay');
-
-    // Apply background
-    if (animBg) {
-      const { colors, speed } = JSON.parse(animBg);
-      container.style.background = `linear-gradient(45deg, ${colors.join(', ')})`;
-      container.style.backgroundSize = '400%';
-      container.style.animation = `gradient ${speed}s ease infinite`;
-    } else if (bgColor) {
-      container.style.background = bgColor;
-    }
-
-    // Apply media
-    if (mediaUrl) {
-      if (mediaType.startsWith('video')) {
-        const video = document.createElement('video');
-        video.src = mediaUrl;
-        video.autoplay = true;
-        video.loop = true;
-        video.muted = true;
-        video.id = 'content';
-        content.replaceWith(video);
-      } else {
-        const img = document.createElement('img');
-        img.src = mediaUrl;
-        img.id = 'content';
-        content.replaceWith(img);
+    async function fetchState() {
+      try {
+        const response = await fetch(`${backendUrl}/state/${totemId}`);
+        if (!response.ok) throw new Error('Error al obtener estado');
+        const state = await response.json();
+        console.log('Fetched state for totem:', { totemId, state }); // Debug
+        updateDisplay(state);
+      } catch (error) {
+        console.error('Fetch state error:', error.message);
       }
-      document.getElementById('content').classList.toggle('autofit', autofit);
     }
 
-    // Apply text
-    if (textSettings) {
-      const { text, font, size, color, position } = JSON.parse(textSettings);
-      textOverlay.style.fontFamily = font;
-      textOverlay.style.fontSize = size;
-      textOverlay.style.color = color;
-      textOverlay.style.top = `${position}%`;
-      textOverlay.style.transform = 'translateY(-50%)';
-      textOverlay.textContent = text;
+    function updateDisplay(state) {
+      const container = document.getElementById('display-container');
+      const textElement = document.getElementById('display-text');
+      const mediaElement = document.getElementById('display-media');
+      const videoElement = document.getElementById('display-video');
+
+      // Apply background
+      if (state.background) {
+        if (state.background.type === 'color') {
+          container.classList.remove('animated-bg');
+          container.style.backgroundColor = state.background.value;
+          console.log('Applied static color:', state.background.value); // Debug
+        } else if (state.background.type === 'animatedBackground') {
+          // Check if background state has changed
+          const backgroundChanged = !lastBackgroundState ||
+            lastBackgroundState.type !== 'animatedBackground' ||
+            lastBackgroundState.value[0] !== state.background.value[0] ||
+            lastBackgroundState.value[1] !== state.background.value[1] ||
+            lastBackgroundState.value[2] !== state.background.value[2] ||
+            lastBackgroundState.duration !== state.background.duration;
+          
+          if (backgroundChanged) {
+            container.classList.remove('animated-bg');
+            container.style.backgroundColor = '';
+            container.style.setProperty('--color1', state.background.value[0]);
+            container.style.setProperty('--color2', state.background.value[1]);
+            container.style.setProperty('--color3', state.background.value[2] || state.background.value[0]);
+            container.style.setProperty('--animation-duration', `${state.background.duration}s`);
+            container.classList.add('animated-bg');
+            console.log('Applied animated background:', {
+              color1: state.background.value[0],
+              color2: state.background.value[1],
+              color3: state.background.value[2] || state.background.value[0],
+              duration: state.background.duration,
+              hasAnimatedBg: container.classList.contains('animated-bg')
+            }); // Debug
+          } else {
+            console.log('Skipped animated background update (no change)'); // Debug
+          }
+          lastBackgroundState = { ...state.background };
+        }
+      }
+
+      // Apply text
+      if (state.text) {
+        textElement.textContent = state.text.text;
+        textElement.style.fontFamily = `'${state.text.font}', serif`;
+        textElement.style.fontSize = `${state.text.size}px`;
+        textElement.style.color = state.text.color;
+        textElement.style.top = `${state.text.position}%`;
+        textElement.style.transform = 'translateY(-50%)';
+        console.log('Applied text:', state.text); // Debug
+      } else {
+        textElement.textContent = '';
+      }
+
+      // Apply media
+      if (state.media && state.media !== currentMediaUrl) {
+        const isVideo = state.media.endsWith('.mp4') || state.media.endsWith('.mov');
+        const targetElement = isVideo ? videoElement : mediaElement;
+        mediaElement.style.display = isVideo ? 'none' : 'block';
+        videoElement.style.display = isVideo ? 'block' : 'none';
+        targetElement.src = state.media;
+        
+      // Ajustar el fit
+      mediaElement.classList.remove('cover-fit', 'contain-fit');
+      videoElement.classList.remove('cover-fit', 'contain-fit');
+      const fitClass = state.autofit ? 'cover-fit' : 'contain-fit';
+      targetElement.classList.add(fitClass);
+
+      currentMediaUrl = state.media;
+
+        targetElement.onerror = () => {
+          console.error('Media load error:', state.media);
+        };
+
+        if (isVideo) {
+          videoElement.play().catch(err => {
+            console.error('Video play error:', err);
+          });
+        }
+        console.log('Applied media:', state.media); // Debug
+      } else if (!state.media) {
+        mediaElement.style.display = 'none';
+        videoElement.style.display = 'none';
+        currentMediaUrl = null;
+        console.log('Cleared media'); // Debug
+      }
     }
+
+    // Poll for state updates every 2 seconds
+    fetchState();
+    setInterval(fetchState, 2000);
   </script>
 </body>
 </html>
