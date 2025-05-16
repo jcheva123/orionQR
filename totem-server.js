@@ -54,12 +54,12 @@ app.get('/state/:totemId', (req, res) => {
 
 // Endpoint to set state
 app.post('/state', (req, res) => {
-  const { totemId, text, background, media } = req.body;
+  const { totemId, text, background, media, autofit } = req.body;
   if (!totemId) {
     console.error('Invalid totemId:', totemId);
     return res.status(400).json({ error: 'TotemId requerido' });
   }
-  totemStates[totemId] = { text, background, media };
+  totemStates[totemId] = { text, background, media, autofit };
   console.log('Stored state:', { totemId, state: totemStates[totemId] });
   res.json({ success: true });
 });
