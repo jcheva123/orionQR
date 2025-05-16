@@ -2,90 +2,110 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=344, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Totem Display</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: black;
+      background: #000;
     }
-    #display {
+    #container {
       width: 344px;
       height: 946px;
       position: relative;
+      overflow: hidden;
     }
-    #media {
+    #content {
       width: 100%;
       height: 100%;
-      object-fit: contain; /* Default: fit width, may have black bars */
+      object-fit: contain; /* Default: scale to fit width */
+      position: absolute;
+      top: 0;
+      left: 0;
     }
-    #media.autofit {
-      object-fit: cover; /* Autofit: cover full area, crop excess */
+    #content.autofit {
+      object-fit: cover; /* Autofit: cover full screen, may crop */
+      min-width: 100%;
+      min-height: 100%;
     }
-    #text-overlay {
+    #textOverlay {
       position: absolute;
       width: 100%;
       text-align: center;
-      color: white;
+      pointer-events: none;
+    }
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
   </style>
 </head>
 <body>
-  <div id="display">
-    <div id="text-overlay"></div>
+  <div id="container">
+    <div id="content"></div>
+    <div id="textOverlay"></div>
   </div>
 
   <script>
-    function updateDisplay(data) {
-      const display = document.getElementById('display');
-      const textOverlay = document.getElementById('text-overlay');
-
-      if (data.reset) {
-        display.style.background = 'black';
-        display.innerHTML = '<div id="text-overlay"></div>';
-        return;
-      }
-
-      if (data.type) {
-        const isVideo = data.type === 'video';
-        const element = isVideo ? document.createElement('video') : document.createElement('img');
-        element.id = 'media';
-        element.src = data.url;
-        if (isVideo) {
-          element.autoplay = true;
-          element.loop = true;
-          element.muted = true;
-        }
-        element.classList.toggle('autofit', data.autofit);
-        display.innerHTML = '';
-        display.appendChild(element);
-        display.appendChild(textOverlay);
-      }
-
-      if (data.background) {
-        display.style.background = data.background;
-      }
-
-      if (data.text) {
-        textOverlay.style.fontFamily = data.font;
-        textOverlay.style.fontSize = data.fontSize;
-        textOverlay.style.color = data.color;
-        textOverlay.style.top = `${data.position}%`;
-        textOverlay.textContent = data.text;
-      }
-
-      if (data.animationSpeed) {
-        // Add animation if needed
-        display.style.transition = `background ${data.animationSpeed}s`;
-      }
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
     }
 
-    // Placeholder: Receive data from index.html (e.g., WebSocket, postMessage)
-    window.addEventListener('message', (event) => {
-      updateDisplay(event.data);
-    });
+    const totem = getQueryParam('totem') || '1';
+    const mediaUrl = localStorage.getItem(`totem${totem}_media`);
+    const autofit = localStorage.getItem(`totem${totem}_autofit`) === 'true';
+    const mediaType = localStorage.getItem(`totem${totem}_type`);
+    const bgColor = localStorage.getItem(`totem${totem}_bgColor`);
+    const animBg = localStorage.getItem(`totem${totem}_animBg`);
+    const textSettings = localStorage.getItem(`totem${totem}_text`);
+
+    const container = document.getElementById('container');
+    const content = document.getElementById('content');
+    const textOverlay = document.getElementById('textOverlay');
+
+    // Apply background
+    if (animBg) {
+      const { colors, speed } = JSON.parse(animBg);
+      container.style.background = `linear-gradient(45deg, ${colors.join(', ')})`;
+      container.style.backgroundSize = '400%';
+      container.style.animation = `gradient ${speed}s ease infinite`;
+    } else if (bgColor) {
+      container.style.background = bgColor;
+    }
+
+    // Apply media
+    if (mediaUrl) {
+      if (mediaType.startsWith('video')) {
+        const video = document.createElement('video');
+        video.src = mediaUrl;
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.id = 'content';
+        content.replaceWith(video);
+      } else {
+        const img = document.createElement('img');
+        img.src = mediaUrl;
+        img.id = 'content';
+        content.replaceWith(img);
+      }
+      document.getElementById('content').classList.toggle('autofit', autofit);
+    }
+
+    // Apply text
+    if (textSettings) {
+      const { text, font, size, color, position } = JSON.parse(textSettings);
+      textOverlay.style.fontFamily = font;
+      textOverlay.style.fontSize = size;
+      textOverlay.style.color = color;
+      textOverlay.style.top = `${position}%`;
+      textOverlay.style.transform = 'translateY(-50%)';
+      textOverlay.textContent = text;
+    }
   </script>
 </body>
 </html>
