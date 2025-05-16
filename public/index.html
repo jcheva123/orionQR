@@ -196,18 +196,17 @@
         </div>
         <div class="accordion-content">
           <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="w-full p-2 border rounded bg-gray-800 text-white border-gray-600">
-          
-<label class="mt-2 flex items-center space-x-2 text-sm text-white">
+          <button id="upload-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Subir archivo">
+            <i class="fas fa-upload mr-2"></i>Subir y Mostrar
+          </button>
+      <label class="mt-2 flex items-center space-x-2 text-sm text-white">
   <input id="autofit-checkbox" type="checkbox" class="form-checkbox text-yellow-500">
   <span>Ajustar a pantalla (autofit)</span>
 </label>
-
-<button id="upload-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Subir archivo">
-            <i class="fas fa-upload mr-2"></i>Subir y Mostrar
-          </button>
         </div>
       </div>
-      
+
+
       <div class="mb-6">
         <div class="accordion-header flex justify-between items-center">
           <h3 class="text-xl">🎨 Color de Fondo</h3>
@@ -315,18 +314,18 @@
     let randomColorInterval = null;
     let currentMediaUrl = null;
 
-    async function setState({ text, background, media }) {
-      const totemId = document.getElementById('totem-select').value;
-      try {
-        const response = await fetch(`${backendUrl}/state`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          const body = { totemId, text, background, media };
-      if (typeof autofit !== 'undefined') {
-        body.autofit = autofit;
-      }
+async function setState({ text, background, media, autofit }) {
+  const totemId = document.getElementById('totem-select').value;
+  const body = { totemId, text, background, media };
+  if (typeof autofit !== 'undefined') {
+    body.autofit = autofit;
+  }
+  try {
+    const response = await fetch(`${backendUrl}/state`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
-        });
+    });
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Error al actualizar contenido');
@@ -380,7 +379,8 @@
           type: file.type, 
           size: file.size 
         }); // Debug
-        const autofit = document.getElementById('autofit-checkbox').checked;
+const autofit = document.getElementById('autofit-checkbox').checked;
+
 await setState({ media: currentMediaUrl, text: null, background: currentBackground, autofit });
         updateMediaPreview();
         fileInput.value = '';
@@ -662,4 +662,3 @@ await setState({ media: currentMediaUrl, text: null, background: currentBackgrou
   </script>
 </body>
 </html>
- 
