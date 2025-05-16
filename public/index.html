@@ -1,83 +1,664 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OrionQR - Control Totem LED</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lobster:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
+      transition: background 0.5s;
+    }
+    body.light-mode {
+      background: linear-gradient(135deg, #f3e7e9 0%, #e3eeff 100%);
+    }
+    #admin-panel {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: none; /* Hidden by default */
+    }
+    .text-preview {
+      width: 344px;
+      height: 946px;
+      background-color: #F8E1E9;
+      position: relative;
+      overflow: hidden;
+      margin: 1rem auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+    }
+    .preview-media {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      z-index: 5; /* Below text */
+    }
+    .preview-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      white-space: pre-wrap;
+      animation: subtleAnimation 30s infinite;
+      z-index: 10; /* Above media */
+    }
+    @keyframes subtleAnimation {
+      0% { opacity: 0; transform: translateY(20px); }
+      5% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      95% { opacity: 0.8; transform: translateY(-10px); }
+      100% { opacity: 0; transform: translateY(20px); }
+    }
+    @keyframes backgroundAnimation {
+      0% { background-color: var(--color1); }
+      33% { background-color: var(--color2); }
+      66% { background-color: var(--color3, var(--color1)); }
+      100% { background-color: var(--color1); }
+    }
+    .animated-bg {
+      animation: backgroundAnimation var(--animation-duration, 15s) infinite;
+    }
+    .color-input {
+      width: 50px;
+      height: 30px;
+    }
+    .btn-primary {
+      background: linear-gradient(45deg, #D4A017, #FFD700);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.4s, height 0.4s;
+    }
+    .btn-primary:active::after {
+      width: 200px;
+      height: 200px;
+    }
+    .btn-secondary {
+      background: linear-gradient(45deg, #4B5EAA, #6B7280);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-secondary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .color-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      transition: transform 0.2s;
+    }
+    .color-btn:hover {
+      transform: scale(1.1);
+    }
+    .accordion-header {
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.75rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .accordion-header:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .accordion-content.open {
+      max-height: 1200px;
+    }
+    .tooltip {
+      position: relative;
+    }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    #particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      ring: 2px solid #D4A017;
+      box-shadow: 0 0 8px rgba(212, 160, 23, 0.5);
+    }
+  </style>
 </head>
-<body>
-  <h1>OrionQR - Control Totem LED</h1>
-  <div>
-    <button>Totem 1</button>
-    <button>Totem 2</button>
-    <button>Totem 3</button>
+<body class="font-['Playfair_Display'] text-gray-200">
+  <canvas id="particles"></canvas>
+  <div class="min-h-screen flex flex-col items-center justify-center p-4 relative">
+    <div class="flex justify-between w-full max-w-md mb-4">
+      <h1 class="text-3xl text-[#D4A017] font-bold">OrionQR - Control Totem LED</h1>
+      <button id="theme-toggle" class="btn-secondary tooltip" data-tooltip="Cambiar Tema">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+    <select id="totem-select" class="w-full max-w-md p-2 mb-4 border rounded bg-gray-800 text-white border-gray-600 focus:ring-2 focus:ring-[#D4A017]">
+      <option value="totem1">Totem 1</option>
+      <option value="totem2">Totem 2</option>
+      <option value="totem3">Totem 3</option>
+    </select>
+    <input id="admin-password" type="password" placeholder="Contraseña" class="w-full max-w-md p-2 mb-4 border rounded bg-gray-800 text-white border-gray-600 focus:ring-2 focus:ring-[#D4A017]">
+    
+    <div id="admin-panel" class="w-full max-w-md p-6 rounded-lg">
+      <h2 class="text-2xl mb-4">Opciones</h2>
+      
+      <div class="mb-6">
+        <div class="accordion-header flex justify-between items-center">
+          <h3 class="text-xl">📸 Cargar Foto/Video</h3>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="accordion-content">
+          <input id="media-upload" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" class="w-full p-2 border rounded bg-gray-800 text-white border-gray-600">
+          
+<label class="mt-2 flex items-center space-x-2 text-sm text-white">
+  <input id="autofit-checkbox" type="checkbox" class="form-checkbox text-yellow-500">
+  <span>Ajustar a pantalla (autofit)</span>
+</label>
+
+<button id="upload-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Subir archivo">
+            <i class="fas fa-upload mr-2"></i>Subir y Mostrar
+          </button>
+        </div>
+      </div>
+      
+      <div class="mb-6">
+        <div class="accordion-header flex justify-between items-center">
+          <h3 class="text-xl">🎨 Color de Fondo</h3>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="accordion-content">
+          <div class="grid grid-cols-3 gap-2 my-4">
+            <button class="color-btn bg-black tooltip" onclick="setColor('black')" data-tooltip="Negro (Apagar)"></button>
+            <button class="color-btn bg-red-500 tooltip" onclick="setColor('red')" data-tooltip="Rojo"></button>
+            <button class="color-btn bg-blue-500 tooltip" onclick="setColor('blue')" data-tooltip="Azul"></button>
+            <button class="color-btn bg-green-500 tooltip" onclick="setColor('green')" data-tooltip="Verde"></button>
+            <button class="color-btn bg-yellow-500 tooltip" onclick="setColor('yellow')" data-tooltip="Amarillo"></button>
+            <button class="color-btn bg-[#F8E1E9] border-gray-400 tooltip" onclick="setColor('#F8E1E9')" data-tooltip="Rosa"></button>
+          </div>
+          <input id="custom-color" type="color" class="mt-2 w-full h-10 bg-gray-800 border-gray-600">
+          <button id="custom-color-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Aplicar color">
+            <i class="fas fa-palette mr-2"></i>Aplicar Color Personalizado
+          </button>
+          <div class="mt-4">
+            <h4 class="text-lg mb-2">Fondo Animado</h4>
+            <div class="mb-2 flex items-center">
+              <label class="block mr-2">Color 1:</label>
+              <input id="bg-color1" type="color" value="#F8E1E9" class="color-input bg-gray-800 border-gray-600">
+            </div>
+            <div class="mb-2 flex items-center">
+              <label class="block mr-2">Color 2:</label>
+              <input id="bg-color2" type="color" value="#D4A017" class="color-input bg-gray-800 border-gray-600">
+            </div>
+            <div class="mb-2 flex items-center">
+              <label class="block mr-2">Color 3 (opcional):</label>
+              <input id="bg-color3" type="color" value="#FFFFFF" class="color-input bg-gray-800 border-gray-600">
+            </div>
+            <div class="mb-2">
+              <label class="block mb-1">Velocidad Fondo:</label>
+              <input id="bg-speed" type="range" min="1" max="30" value="15" class="w-full">
+              <span id="bg-speed-value" class="text-sm text-gray-400">15s</span>
+            </div>
+            <button id="animated-bg-btn" class="w-full btn-primary tooltip" data-tooltip="Aplicar fondo animado">
+              <i class="fas fa-play mr-2"></i>Aplicar Fondo Animado
+            </button>
+            <button id="random-colors-btn" class="mt-2 w-full btn-primary tooltip" data-tooltip="Colores aleatorios">
+              <i class="fas fa-dice mr-2"></i>Colores Random
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-6">
+        <div class="accordion-header flex justify-between items-center">
+          <h3 class="text-xl">✍️ Texto Personalizado</h3>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="accordion-content">
+          <textarea id="custom-text" rows="3" placeholder="Ej: Boda de Alejo\n& Valentina" class="w-full p-2 mb-2 border rounded bg-gray-800 text-white border-gray-600 resize-none"></textarea>
+          <div class="mb-2">
+            <label class="block mb-1">Tipografía:</label>
+            <select id="text-font" class="w-full p-2 border rounded bg-gray-800 text-white border-gray-600">
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Lobster">Lobster</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="block mb-1">Tamaño del Texto:</label>
+            <select id="text-size" class="w-full p-2 border rounded bg-gray-800 text-white border-gray-600">
+              <option value="20">Pequeño (20px)</option>
+              <option value="30">Mediano (30px)</option>
+              <option value="40">Grande (40px)</option>
+              <option value="50">Muy Grande (50px)</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="block mb-1">Color del Texto:</label>
+            <input id="text-color" type="color" class="w-full h-10 bg-gray-800 border-gray-600">
+          </div>
+          <div class="mb-2">
+            <label class="block mb-1">Posición Vertical:</label>
+            <input id="text-position" type="range" min="0" max="100" value="50" class="w-full">
+            <span id="position-value" class="text-sm text-gray-400">50%</span>
+          </div>
+          <button id="text-btn" class="w-full btn-primary tooltip mb-4" data-tooltip="Aplicar texto">
+            <i class="fas fa-text-height mr-2"></i>Aplicar Texto
+          </button>
+          <div class="text-preview" id="text-preview">
+            <img id="preview-media" class="preview-media" style="display: none;">
+            <video id="preview-video" class="preview-media" style="display: none;" loop muted></video>
+            <div class="preview-text" id="preview-text">Texto de ejemplo</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="reset-btn" class="w-full btn-secondary tooltip" data-tooltip="Restablecer configuración">
+        <i class="fas fa-undo mr-2"></i>Restablecer
+      </button>
+    </div>
   </div>
-  <div class="options">
-    <h2>Opciones</h2>
-    <div>
-      <h3>📸 Cargar Foto/Video</h3>
-      <input type="file" id="mediaInput" accept="image/*,video/*">
-      <button onclick="uploadMedia()">Subir y Mostrar</button>
-    </div>
-    <div>
-      <h3>🎨 Color de Fondo</h3>
-      <input type="color" id="bgColor">
-      <button onclick="applyBgColor()">Aplicar Color Personalizado</button>
-      <h4>Fondo Animado</h4>
-      <label>Color 1: <input type="color" id="animColor1"></label>
-      <label>Color 2: <input type="color" id="animColor2"></label>
-      <label>Color 3 (opcional): <input type="color" id="animColor3"></label>
-      <label>Velocidad Fondo: <input type="range" id="animSpeed" min="5" max="30" value="15"> <span>15s</span></label>
-      <button onclick="applyAnimatedBg()">Aplicar Fondo Animado</button>
-      <button onclick="applyRandomColors()">Colores Random</button>
-    </div>
-    <div>
-      <h3>✍️ Texto Personalizado</h3>
-      <label>Tipografía:
-        <select id="font">
-          <option>Playfair Display</option>
-          <option>Roboto</option>
-          <option>Montserrat</option>
-          <option>Lobster</option>
-        </select>
-      </label>
-      <label>Tamaño del Texto:
-        <select id="fontSize">
-          <option value="20">Pequeño (20px)</option>
-          <option value="30">Mediano (30px)</option>
-          <option value="40">Grande (40px)</option>
-          <option value="50">Muy Grande (50px)</option>
-        </select>
-      </label>
-      <label>Color del Texto: <input type="color" id="textColor"></label>
-      <label>Posición Vertical: <input type="range" id="textPosition" min="0" max="100" value="50"> <span>50%</span></label>
-      <button onclick="applyText()">Aplicar Texto</button>
-      <textarea id="customText" placeholder="Texto de ejemplo"></textarea>
-    </div>
-    <div>
-      <h3>📏 Ajuste de Contenido</h3>
-      <label><input type="checkbox" id="autofit" checked> Autofit (llenar pantalla sin deformar)</label>
-    </div>
-    <button onclick="resetOptions()">Restablecer</button>
-  </div>
+
   <script>
-    function uploadMedia() {
-      const file = document.getElementById('mediaInput').files[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        sendToDisplay({ type: 'media', url, autofit: document.getElementById('autofit').checked });
+    const backendUrl = 'https://orionqr.onrender.com';
+
+    // Track the current state
+    let currentBackground = { type: 'color', value: '#F8E1E9' };
+    let randomColorsActive = false;
+    let randomColorInterval = null;
+    let currentMediaUrl = null;
+
+    async function setState({ text, background, media }) {
+      const totemId = document.getElementById('totem-select').value;
+      try {
+        const response = await fetch(`${backendUrl}/state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          const body = { totemId, text, background, media };
+      if (typeof autofit !== 'undefined') {
+        body.autofit = autofit;
+      }
+      body: JSON.stringify(body)
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Error al actualizar contenido');
+        }
+        console.log('State updated for totem:', { totemId, text, background, media }); // Debug
+      } catch (error) {
+        alert('Error al actualizar estado: ' + error.message);
+        console.error('Set state error:', error);
       }
     }
-    function resetOptions() {
-      sendToDisplay({ type: 'reset' });
-      document.getElementById('autofit').checked = true;
+
+    async function uploadMedia() {
+      const fileInput = document.getElementById('media-upload');
+      const totemId = document.getElementById('totem-select').value;
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('Selecciona un archivo');
+        return;
+      }
+
+      // Client-side validation
+      const maxSize = 60 * 1024 * 1024; // 60MB
+      if (file.size > maxSize) {
+        alert('El archivo es demasiado grande. Usa un archivo menor a 60MB.');
+        return;
+      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Formato no soportado. Usa JPEG, PNG, MP4 o MOV.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('media', file);
+      formData.append('totemId', totemId);
+
+      try {
+        const response = await fetch(`${backendUrl}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        const responseData = await response.json();
+        if (!response.ok) {
+          throw new Error(responseData.error || 'Error al subir archivo');
+        }
+        currentMediaUrl = responseData.path.startsWith('http') 
+          ? responseData.path 
+          : `${backendUrl}${responseData.path}`;
+        console.log('Uploaded media:', { 
+          url: currentMediaUrl, 
+          type: file.type, 
+          size: file.size 
+        }); // Debug
+        const autofit = document.getElementById('autofit-checkbox').checked;
+await setState({ media: currentMediaUrl, text: null, background: currentBackground, autofit });
+        updateMediaPreview();
+        fileInput.value = '';
+        alert('Archivo subido exitosamente');
+      } catch (error) {
+        alert(`Error al subir el archivo: ${error.message}`);
+        console.error('Upload error:', {
+          message: error.message,
+          status: response?.status,
+          responseData
+        });
+      }
     }
-    function sendToDisplay(data) {
-      // Placeholder: Assumes existing mechanism to send data to display.html
-      const url = `display.html?data=${encodeURIComponent(JSON.stringify(data))}`;
-      window.open(url, '_blank');
+
+    function updateMediaPreview() {
+      const previewMedia = document.getElementById('preview-media');
+      const previewVideo = document.getElementById('preview-video');
+      
+      if (currentMediaUrl) {
+        const isVideo = currentMediaUrl.endsWith('.mp4') || currentMediaUrl.endsWith('.mov');
+        previewMedia.style.display = isVideo ? 'none' : 'block';
+        previewVideo.style.display = isVideo ? 'block' : 'none';
+        
+        const mediaElement = isVideo ? previewVideo : previewMedia;
+        mediaElement.src = currentMediaUrl;
+        
+        mediaElement.onerror = () => {
+          alert('Error: No se pudo cargar el archivo multimedia. Verifica la URL o el formato.');
+          console.error('Media load error:', currentMediaUrl);
+        };
+        
+        if (isVideo) {
+          previewVideo.play().catch(err => {
+            console.error('Video play error:', err);
+          });
+        }
+      } else {
+        previewMedia.style.display = 'none';
+        previewVideo.style.display = 'none';
+      }
     }
-    // Placeholder: Assumes existing JavaScript for other functions (selectTotem, applyBgColor, etc.)
+
+    function setColor(color) {
+      stopRandomColors();
+      currentBackground = { type: 'color', value: color };
+      setState({ background: currentBackground });
+      const preview = document.getElementById('text-preview');
+      preview.classList.remove('animated-bg');
+      preview.style.backgroundColor = color;
+      console.log('Set static color:', color); // Debug
+    }
+
+    function setAnimatedBackground(colors, duration) {
+      stopRandomColors();
+      const durationSeconds = parseFloat(duration); // Ensure number
+      currentBackground = { type: 'animatedBackground', value: colors, duration: durationSeconds };
+      console.log('Applying animated background:', { colors, duration: durationSeconds }); // Debug
+      setState({ background: currentBackground });
+      const preview = document.getElementById('text-preview');
+      // Clear previous styles
+      preview.classList.remove('animated-bg');
+      preview.style.backgroundColor = '';
+      // Set CSS custom properties
+      preview.style.setProperty('--color1', colors[0]);
+      preview.style.setProperty('--color2', colors[1]);
+      preview.style.setProperty('--color3', colors[2] || colors[0]);
+      preview.style.setProperty('--animation-duration', `${durationSeconds}s`);
+      // Apply animation
+      preview.classList.add('animated-bg');
+      console.log('Animation applied to preview:', {
+        color1: preview.style.getPropertyValue('--color1'),
+        color2: preview.style.getPropertyValue('--color2'),
+        color3: preview.style.getPropertyValue('--color3'),
+        duration: preview.style.getPropertyValue('--animation-duration'),
+        hasAnimatedBg: preview.classList.contains('animated-bg')
+      }); // Debug
+      alert('Fondo animado aplicado con duración de ' + durationSeconds + 's'); // User feedback
+    }
+
+    function toggleRandomColors() {
+      randomColorsActive = !randomColorsActive;
+      const preview = document.getElementById('text-preview');
+      if (randomColorsActive) {
+        randomColorInterval = setInterval(() => {
+          const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#F8E1E9'];
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          currentBackground = { type: 'color', value: randomColor };
+          setState({ background: currentBackground });
+          preview.classList.remove('animated-bg');
+          preview.style.backgroundColor = randomColor;
+          console.log('Random color applied:', randomColor); // Debug
+        }, 1000);
+      } else {
+        stopRandomColors();
+        setColor('#F8E1E9');
+      }
+    }
+
+    function stopRandomColors() {
+      randomColorsActive = false;
+      if (randomColorInterval) {
+        clearInterval(randomColorInterval);
+        randomColorInterval = null;
+      }
+      console.log('Stopped random colors'); // Debug
+    }
+
+    function updateTextPreview() {
+      const text = document.getElementById('custom-text').value || 'Texto de ejemplo';
+      const font = document.getElementById('text-font').value;
+      const size = document.getElementById('text-size').value + 'px';
+      const color = document.getElementById('text-color').value;
+      const position = document.getElementById('text-position').value;
+      const previewText = document.getElementById('preview-text');
+
+      previewText.textContent = text;
+      previewText.style.fontFamily = `'${font}', serif`;
+      previewText.style.fontSize = size;
+      previewText.style.color = color;
+      previewText.style.top = `${position}%`;
+      previewText.style.transform = 'translateY(-50%)';
+      console.log('Text preview updated:', { text, font, size, color, position }); // Debug
+    }
+
+    function resetSettings() {
+      stopRandomColors();
+      setColor('#F8E1E9');
+      document.getElementById('custom-text').value = '';
+      document.getElementById('text-font').value = 'Playfair Display';
+      document.getElementById('text-size').value = '30';
+      document.getElementById('text-color').value = '#000000';
+      document.getElementById('text-position').value = '50';
+      document.getElementById('bg-color1').value = '#F8E1E9';
+      document.getElementById('bg-color2').value = '#D4A017';
+      document.getElementById('bg-color3').value = '#FFFFFF';
+      document.getElementById('bg-speed').value = '15';
+      currentMediaUrl = null;
+      updateTextPreview();
+      updateMediaPreview();
+      document.getElementById('bg-speed-value').textContent = '15s';
+      document.getElementById('position-value').textContent = '50%';
+      setState({ text: null, background: currentBackground, media: null });
+      console.log('Settings reset'); // Debug
+    }
+
+    // Accordion functionality
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const content = header.nextElementSibling;
+        content.classList.toggle('open');
+        header.querySelector('i').classList.toggle('fa-chevron-down');
+        header.querySelector('i').classList.toggle('fa-chevron-up');
+      });
+    });
+
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      const icon = document.getElementById('theme-toggle').querySelector('i');
+      icon.classList.toggle('fa-moon');
+      icon.classList.toggle('fa-sun');
+      console.log('Theme toggled:', document.body.classList.contains('light-mode') ? 'light' : 'dark'); // Debug
+    });
+
+    // Particle animation
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = [];
+    for (let i = 0; i < 50; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 1,
+        vx: Math.random() * 2 - 1,
+        vy: Math.random() * 2 - 1
+      });
+    }
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fill();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Sound effect for buttons
+    const clickSound = new Audio('https://www.soundjay.com/buttons/button-3.mp3');
+    clickSound.volume = 0.2;
+    document.querySelectorAll('.btn-primary, .btn-secondary, .color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        clickSound.play();
+      });
+    });
+
+    // Event listeners
+    document.getElementById('admin-password').addEventListener('input', (e) => {
+      if (e.target.value === 'admin123') {
+        document.getElementById('admin-panel').style.display = 'block';
+      } else {
+        document.getElementById('admin-panel').style.display = 'none';
+      }
+    });
+
+    document.getElementById('upload-btn').addEventListener('click', uploadMedia);
+
+    document.getElementById('custom-color-btn').addEventListener('click', () => {
+      stopRandomColors();
+      const color = document.getElementById('custom-color').value;
+      setColor(color);
+    });
+
+    document.getElementById('animated-bg-btn').addEventListener('click', () => {
+      stopRandomColors();
+      const color1 = document.getElementById('bg-color1').value;
+      const color2 = document.getElementById('bg-color2').value;
+      const color3 = document.getElementById('bg-color3').value;
+      const duration = document.getElementById('bg-speed').value;
+      setAnimatedBackground([color1, color2, color3], duration);
+    });
+
+    document.getElementById('bg-speed').addEventListener('input', (e) => {
+      const duration = e.target.value;
+      document.getElementById('bg-speed-value').textContent = `${duration}s`;
+      const preview = document.getElementById('text-preview');
+      preview.style.setProperty('--animation-duration', `${duration}s`);
+      if (currentBackground.type === 'animatedBackground') {
+        currentBackground.duration = parseFloat(duration);
+        setState({ background: currentBackground });
+        console.log('Updated animation duration:', duration); // Debug
+      }
+    });
+
+    document.getElementById('random-colors-btn').addEventListener('click', toggleRandomColors);
+
+    document.getElementById('text-btn').addEventListener('click', () => {
+      const text = document.getElementById('custom-text').value;
+      const font = document.getElementById('text-font').value;
+      const size = document.getElementById('text-size').value;
+      const color = document.getElementById('text-color').value;
+      const position = document.getElementById('text-position').value;
+      if (!text) {
+        alert('Por favor, ingresa un texto');
+        return;
+      }
+      const textConfig = { text, font, size: parseInt(size), color, position: parseInt(position) };
+      setState({ text: textConfig, background: currentBackground, media: null });
+      currentMediaUrl = null;
+      updateMediaPreview();
+      console.log('Text applied:', textConfig); // Debug
+    });
+
+    document.getElementById('custom-text').addEventListener('input', updateTextPreview);
+    document.getElementById('text-font').addEventListener('change', updateTextPreview);
+    document.getElementById('text-size').addEventListener('change', updateTextPreview);
+    document.getElementById('text-color').addEventListener('input', updateTextPreview);
+    document.getElementById('text-position').addEventListener('input', (e) => {
+      document.getElementById('position-value').textContent = `${e.target.value}%`;
+      updateTextPreview();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', resetSettings);
+
+    updateTextPreview();
+    updateMediaPreview();
   </script>
 </body>
 </html>
